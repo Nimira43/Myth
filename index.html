@@ -1,13 +1,75 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-GB">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" href="/TheFavicon.png">
-    <title>Myth</title>
+    <title>Myth — Level Editor</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <header class="topbar">
+        <h1>Myth <span>the level editor</span></h1>
+        <label>Zone <select id="zoneSelect"></select></label>
+        <label>Level <select id="levelSelect"></select></label>
+        <div class="btn-group">
+          <button id="btnNew" title="New blank level in this zone">New</button>
+          <button id="btnDuplicate" title="Duplicate this level">Duplicate</button>
+          <button id="btnUp" title="Move level earlier">▲</button>
+          <button id="btnDown" title="Move level later">▼</button>
+          <button id="btnDelete" class="danger" title="Delete this level">Delete</button>
+        </div>
+        <div class="spacer"></div>
+        <span id="saveState" class="save-state">Saved</span>
+        <button id="btnPlay" class="primary" title="Test-play this level (P)">▶ Test Play</button>
+      </header>
+
+      <div class="main">
+        <aside class="panel palette" id="palette"></aside>
+
+        <section class="stage">
+          <canvas id="screen"></canvas>
+          <div class="statusbar" id="statusbar">&nbsp;</div>
+        </section>
+
+        <aside class="panel props">
+          <h2>Level</h2>
+          <label class="field">Name <input id="levelName" type="text" maxlength="40" /></label>
+
+          <h2>Tool</h2>
+          <div class="tools" id="tools">
+            <button data-tool="brush" title="Brush (B)">Brush</button>
+            <button data-tool="rect" title="Rectangle (R)">Rect</button>
+            <button data-tool="fill" title="Flood fill (F)">Fill</button>
+          </div>
+          <label class="check"><input type="checkbox" id="gridToggle" checked /> Show grid (G)</label>
+          <label class="check"><input type="checkbox" id="stormToggle" checked /> Storm</label>
+
+          <h2>Checks</h2>
+          <ul class="checks" id="checks"></ul>
+
+          <h2>Files</h2>
+          <div class="file-buttons">
+            <button id="btnExportProject" title="Download every zone and level as one JSON file">Export all</button>
+            <button id="btnImportProject" title="Load a project JSON file (replaces everything)">Import all</button>
+            <button id="btnExportLevel">Export level</button>
+            <button id="btnImportLevel" title="Replace this level with a level JSON file">Import level</button>
+            <button id="btnClear" class="danger">Clear level</button>
+            <button id="btnReset" class="danger" title="Discard local changes and reload the starter levels">Reset all</button>
+          </div>
+
+          <h2>Keys</h2>
+          <dl class="keys">
+            <dt>Left click</dt><dd>Paint / place</dd>
+            <dt>Right click</dt><dd>Erase</dd>
+            <dt>Alt + click</dt><dd>Pick tile</dd>
+            <dt>1-0</dt><dd>Select tile</dd>
+            <dt>Ctrl+Z / Y</dt><dd>Undo / redo</dd>
+            <dt>P</dt><dd>Test play</dd>
+          </dl>
+        </aside>
+      </div>
+    </div>
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

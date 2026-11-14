@@ -1,0 +1,26 @@
+{
+  "image": "skeleton.png",
+  "frameWidth": 24,
+  "frameHeight": 32,
+  "facing": "right",
+  "animations": {
+    "walk": {
+      "row": 0,
+      "frames": 4,
+      "fps": 8,
+      "loop": true
+    },
+    "attack": {
+      "row": 1,
+      "frames": 3,
+      "fps": 10,
+      "loop": false
+    },
+    "collapse": {
+      "row": 2,
+      "frames": 5,
+      "fps": 10,
+      "loop": false
+    }
+  }
+}
