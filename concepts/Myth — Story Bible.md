@@ -1,6 +1,7 @@
 # Myth — Story Bible
+## by Nick Rabone
 
-Nov 14, 2026 · by Nick Rabone
+14th Novemeber 2026
 
 ## Premise
 
