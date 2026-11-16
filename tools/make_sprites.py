@@ -1,16 +1,3 @@
-"""
-Myth — sprite-sheet generator.
-
-Draws the Skeleton Warrior and Sally Miller as small pixel-art rigs (bones/limbs
-as lines, heads and torsos as hand-placed bitmaps), then runs an automatic
-outline pass so everything reads clearly against any background.
-
-Usage:  python3 tools/make_sprites.py
-Output: public/sprites/<name>.png  +  public/sprites/<name>.json
-        tools/preview/<name>_x8.png  (enlarged preview, not used by the game)
-
-Every frame faces RIGHT. The game mirrors frames for left-facing movement.
-"""
 import json
 import math
 import os
@@ -32,13 +19,15 @@ def hexc(h):
 
 
 class Frame:
-    def __init__(self):
-        self.img = Image.new("RGBA", (FW, FH), (0, 0, 0, 0))
+    def __init__(self, w=None, h=None):
+        self.w = w or FW
+        self.h = h or FH
+        self.img = Image.new("RGBA", (self.w, self.h), (0, 0, 0, 0))
         self.px = self.img.load()
 
     def put(self, x, y, c):
         x, y = int(round(x)), int(round(y))
-        if 0 <= x < FW and 0 <= y < FH:
+        if 0 <= x < self.w and 0 <= y < self.h:
             self.px[x, y] = c
 
     def line(self, a, b, c, thick=1):
@@ -73,12 +62,12 @@ class Frame:
     def outline(self, c):
         """Any empty pixel touching a filled pixel (4-way) becomes outline."""
         src = self.img.copy().load()
-        for y in range(FH):
-            for x in range(FW):
+        for y in range(self.h):
+            for x in range(self.w):
                 if src[x, y][3] == 0:
                     for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                         nx, ny = x + dx, y + dy
-                        if 0 <= nx < FW and 0 <= ny < FH and src[nx, ny][3] > 0 \
+                        if 0 <= nx < self.w and 0 <= ny < self.h and src[nx, ny][3] > 0 \
                                 and src[nx, ny] != c:
                             self.px[x, y] = c
                             break
@@ -103,13 +92,15 @@ def limb(f, root, l1, a1, l2, a2, col, thick=1, joint=None):
 def build_sheet(name, anims, outline_col):
     """anims: list of (anim_name, [Frame,...], fps, loop)"""
     cols = max(len(fr) for _, fr, _, _ in anims)
-    sheet = Image.new("RGBA", (cols * FW, len(anims) * FH), (0, 0, 0, 0))
-    meta = {"image": f"{name}.png", "frameWidth": FW, "frameHeight": FH,
+    fw, fh = anims[0][1][0].w, anims[0][1][0].h
+    sheet = Image.new("RGBA", (cols * fw, len(anims) * fh), (0, 0, 0, 0))
+    meta = {"image": f"{name}.png", "frameWidth": fw, "frameHeight": fh,
             "facing": "right", "animations": {}}
     for row, (aname, frames, fps, loop) in enumerate(anims):
         for col, fr in enumerate(frames):
-            fr.outline(outline_col)
-            sheet.paste(fr.img, (col * FW, row * FH))
+            if outline_col:
+                fr.outline(outline_col)
+            sheet.paste(fr.img, (col * fw, row * fh))
         meta["animations"][aname] = {"row": row, "frames": len(frames),
                                      "fps": fps, "loop": loop}
     os.makedirs(OUT, exist_ok=True)
@@ -400,6 +391,199 @@ def make_sally():
     ], SALLY_OUT)
 
 
+
+# ================================================================ CHARON
+ROBE = hexc("#2a2622")
+ROBE_SH = hexc("#1a1714")
+ROBE_HI = hexc("#3c3630")
+VOID = hexc("#050405")
+EMBER = hexc("#e8d8a0")
+BONE_HAND = hexc("#cfc4a8")
+POLE = hexc("#5a4630")
+POLE_HI = hexc("#7a6244")
+
+
+def charon(pole_top, pole_bottom, hand_y, sway=0):
+    """Hooded ferryman, facing right, holding his pole in both hands."""
+    f = Frame()
+    # pole behind the body
+    f.line(pole_top, pole_bottom, POLE)
+    f.line((pole_top[0] + 1, pole_top[1]), (pole_bottom[0] + 1, pole_bottom[1]), POLE_HI)
+    # robe: a tall cone widening to the hem
+    for y in range(9, 31):
+        t = (y - 9) / 22
+        half = 3 + t * 5
+        cx = 11 + sway * t
+        for x in range(int(cx - half), int(cx + half) + 1):
+            col = ROBE_SH if x < cx - half + 2 else ROBE_HI if x > cx + half - 1.5 else ROBE
+            f.put(x, y, col)
+    for x in range(4, 20, 3):                      # ragged hem
+        f.put(x + sway, 31, ROBE_SH)
+    # hood
+    f.bitmap(7, 2, [
+        "..RRRR..",
+        ".RRRRRR.",
+        "RRRRRRRR",
+        "RRRVVVVR",
+        "RRRVEVER",
+        "RRRVVVVR",
+        "RRRRVVR.",
+        ".RRRRR..",
+    ], {"R": ROBE, "V": VOID, "E": EMBER})
+    # arms reaching to the pole, bony hands
+    for hy in (hand_y, hand_y + 5):
+        px_ = pole_top[0] + (pole_bottom[0] - pole_top[0]) * (hy - pole_top[1]) / (pole_bottom[1] - pole_top[1])
+        f.line((12, 12 if hy == hand_y else 15), (px_, hy), ROBE_HI)
+        f.put(px_, hy, BONE_HAND)
+        f.put(px_ + 1, hy, BONE_HAND)
+    return f
+
+
+def make_charon():
+    idle = [charon((19, 0), (5, 31), 13, 0), charon((19, 0), (5, 31), 14, 1)]
+    pole = [
+        charon((20, 0), (8, 31), 10, 0),
+        charon((18, 0), (3, 31), 13, 1),
+        charon((15, 1), (0, 31), 16, 1),
+        charon((18, 0), (4, 31), 14, 0),
+    ]
+    build_sheet("charon", [("idle", idle, 2, True), ("pole", pole, 5, True)], hexc("#000000"))
+
+
+# ================================================================ SHADE
+def shade(phase):
+    """A translucent shade of the dead: hood, reaching arms, wisps for legs."""
+    f = Frame()
+    body = (150, 170, 190, 150)
+    body_dk = (95, 110, 130, 140)
+    body_hi = (200, 215, 230, 170)
+    bob = round(math.sin(phase * math.pi / 2))
+    oy = 4 + bob
+    # hood + head
+    f.bitmap(8, oy, [
+        "..BBBB..",
+        ".BBBBBB.",
+        "BBHVVVBB",
+        "BBVEVEVB",
+        "BBVVVVVB",
+        ".BBVVBB.",
+    ], {"B": body, "H": body_hi, "V": (8, 10, 16, 220), "E": (200, 230, 255, 255)})
+    # body tapering down into wisps
+    for y in range(oy + 6, 30):
+        t = (y - oy - 6) / (30 - oy - 6)
+        half = 5 - t * 3
+        cx = 12 + math.sin(t * 3 + phase) * 2
+        for x in range(int(cx - half), int(cx + half) + 1):
+            col = body_dk if x < cx - half + 1.5 else body
+            if (x + y + phase) % 7 == 0:
+                col = body_hi
+            f.put(x, y, col)
+    for k in range(3):                               # trailing wisps
+        x0 = 9 + k * 3
+        for y in range(26, 32):
+            f.put(x0 + math.sin(y / 2 + phase + k) * 1.5, y, body_dk)
+    # arms reaching forward
+    reach = 3 + (phase % 2)
+    f.line((14, oy + 8), (19 + reach, oy + 11), body)
+    f.line((14, oy + 10), (18 + reach, oy + 14), body_dk)
+    f.put(20 + reach, oy + 11, body_hi)
+    return f
+
+
+def make_shade():
+    build_sheet("shade", [("drift", [shade(i) for i in range(4)], 6, True)], None)
+
+
+# ================================================================ CERBERUS
+FUR = hexc("#1c1a1c")
+FUR_HI = hexc("#34303a")
+FUR_SH = hexc("#0e0c0e")
+EYE_R = hexc("#ff3a1a")
+FANG = hexc("#e8e0cc")
+SNAKE = hexc("#2c4a2a")
+SNAKE_HI = hexc("#4a6e3a")
+
+DOG_HEAD = [
+    ".FFF...",
+    "FFFFFF.",
+    "FFERFFF",
+    "FFFFFFF",
+    ".FFWFWF",
+]
+
+
+def cerberus(legs, body_dy=0, heads=((0, 0), (0, 0), (0, 0)), lying=False, tail=0):
+    """Three-headed hound of Hades with a serpent for a tail (Apollodorus)."""
+    f = Frame(44, 28)
+    by = 12 + body_dy + (5 if lying else 0)
+    # serpent tail behind
+    tx, ty = 7, by + 1
+    for i in range(8):
+        nx = tx - 1
+        ny = ty - 1 + round(math.sin(i * 0.9 + tail) * 1.2)
+        f.line((tx, ty), (nx, ny), SNAKE)
+        tx, ty = nx, ny
+    f.put(tx - 1, ty, SNAKE_HI)
+    f.put(tx - 2, ty, SNAKE_HI)
+    f.put(tx - 2, ty - 1, EYE_R)
+    # far legs
+    if not lying:
+        for (hx, a1, a2) in (legs[1], legs[3]):
+            limb(f, (hx, by + 7), 4, a1, 4, a2, FUR_SH, thick=2)
+    # body: a broad, muscular barrel
+    for y in range(by, by + 9):
+        t = abs(y - (by + 4)) / 4.5
+        half = 12 * math.sqrt(max(0, 1 - t * t))
+        for x in range(int(20 - half), int(20 + half) + 1):
+            col = FUR_HI if y == by or (y == by + 1 and x % 3 == 0) else FUR
+            if y >= by + 7:
+                col = FUR_SH
+            f.put(x, y, col)
+    # serpents in the mane
+    for k, sx in enumerate((22, 25, 28)):
+        f.line((sx, by), (sx - 1 + (k % 2) * 2, by - 3), SNAKE)
+        f.put(sx - 1 + (k % 2) * 2, by - 4, SNAKE_HI)
+    # near legs
+    if lying:
+        f.line((10, by + 8), (17, by + 8), FUR_SH, 2)
+        f.line((24, by + 8), (33, by + 8), FUR, 2)
+    else:
+        for (hx, a1, a2) in (legs[0], legs[2]):
+            _, foot = limb(f, (hx, by + 7), 4, a1, 4, a2, FUR, thick=2)
+            f.put(foot[0] + 2, foot[1], FUR_SH)
+    # three necks and heads at the front
+    bases = [(29, by + 1), (31, by + 3), (29, by + 5)]
+    anchors = [(31, by - 6), (35, by - 2), (32, by + 2)]
+    if lying:
+        anchors = [(32, by - 2), (35, by + 1), (32, by + 4)]
+    for i in (0, 2, 1):                              # middle head drawn last, in front
+        (bx, byy), (ax, ay), (dx, dy) = bases[i], anchors[i], heads[i]
+        hx, hy = ax + dx, ay + dy
+        f.line((bx, byy), (hx + 1, hy + 2), FUR_HI if i == 1 else FUR, 2)
+        f.bitmap(int(hx), int(hy), DOG_HEAD, {"F": FUR_HI if i == 1 else FUR, "E": EYE_R, "R": EYE_R, "W": FANG})
+    return f
+
+
+def make_cerberus():
+    stand = [(12, 5, -5), (14, -5, 5), (27, 5, -5), (29, -5, 5)]
+    idle = [
+        cerberus(stand, 0, ((0, 0), (0, 0), (0, 0)), tail=0),
+        cerberus(stand, 0, ((0, -1), (1, 0), (0, 1)), tail=1.5),
+    ]
+    gallop = [
+        [(12, 35, 10), (14, -30, -10), (27, -30, 5), (29, 35, 10)],
+        [(12, 10, -10), (14, 5, 0), (27, 10, -20), (29, -5, 10)],
+        [(12, -30, -10), (14, 35, 10), (27, 35, 10), (29, -30, 5)],
+        [(12, 5, 0), (14, 10, -10), (27, -5, 10), (29, 10, -20)],
+    ]
+    run = [cerberus(l, (-1 if i % 2 else 0), ((1, -1), (2, 0), (1, 1)), tail=i) for i, l in enumerate(gallop)]
+    rest = [cerberus(stand, 0, ((0, 0), (0, 0), (0, 0)), lying=True, tail=0.5)]
+    build_sheet("cerberus", [("idle", idle, 3, True), ("run", run, 12, True), ("rest", rest, 1, False)], hexc("#000000"))
+
+
 if __name__ == "__main__":
     make_skeleton()
     make_sally()
+    make_charon()
+    make_shade()
+    make_cerberus()

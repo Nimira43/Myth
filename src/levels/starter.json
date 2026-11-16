@@ -3,6 +3,105 @@
   "zones": {
     "greek": [
       {
+        "name": "The Gates of the Underworld",
+        "setting": "underworld",
+        "intro": "Every soul crosses the Styx with an obol for Charon, and none crosses back. Persephone tasted the pomegranate in this place and was bound to it. Bring three of its seeds to the thrones of the Lord and Lady of the dead, and the gates may open for one who still breathes.",
+        "tiles": [
+          "oooooooooooooooooooooooooooooooo",
+          "................................",
+          "................................",
+          "................................",
+          "MMMMMMM......MMMMMM.............",
+          ".............................MMM",
+          "................................",
+          "....MMMMMMMM....................",
+          "......................Hooooooooo",
+          "......................H.........",
+          ".........MMMMMM.......H.........",
+          "......................H.........",
+          "......................H.........",
+          "...MMMMMMM............H.........",
+          "......................H.........",
+          "...Y..................H.........",
+          "MMMY..................H.........",
+          "...Y..................H.........",
+          "oooollooo~~~~~~~~~~~~~oooooooooo",
+          "ooooooooo~~~~~~~~~~~~~oooooooooo"
+        ],
+        "entities": [
+          {
+            "type": "spawn",
+            "c": 1,
+            "r": 3
+          },
+          {
+            "type": "exit",
+            "c": 29,
+            "r": 17,
+            "style": "gates"
+          },
+          {
+            "type": "thrones",
+            "c": 26,
+            "r": 7
+          },
+          {
+            "type": "ferry",
+            "c": 9,
+            "r": 17
+          },
+          {
+            "type": "seed",
+            "c": 15,
+            "r": 3
+          },
+          {
+            "type": "seed",
+            "c": 11,
+            "r": 9
+          },
+          {
+            "type": "seed",
+            "c": 30,
+            "r": 4
+          },
+          {
+            "type": "obol",
+            "c": 5,
+            "r": 12
+          },
+          {
+            "type": "obol",
+            "c": 1,
+            "r": 15
+          },
+          {
+            "type": "shade",
+            "c": 7,
+            "r": 10,
+            "dir": 1
+          },
+          {
+            "type": "shade",
+            "c": 15,
+            "r": 6,
+            "dir": 1
+          },
+          {
+            "type": "shade",
+            "c": 24,
+            "r": 5,
+            "dir": -1
+          },
+          {
+            "type": "cerberus",
+            "c": 26,
+            "r": 17,
+            "dir": -1
+          }
+        ]
+      },
+      {
         "name": "The Field of Ares",
         "tiles": [
           "................................",
@@ -80,8 +179,11 @@
             "r": 12,
             "dir": 1
           }
-        ]
+        ],
+        "setting": "storm",
+        "intro": "In the Field of Ares, Jason sowed the dragon\u2019s teeth, and armed men sprang from the furrows."
       }
     ]
-  }
+  },
+  "starterVersion": 2
 }

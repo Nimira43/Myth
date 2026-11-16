@@ -67,6 +67,7 @@ async function boot() {
   await Promise.all([
     document.fonts.load('16px VT323'),
     document.fonts.load('16px Almendra'),
+    document.fonts.load('italic 16px Almendra'),
   ]).catch(() => {})
   const sprites = await loadAllSprites()
   editor = new Editor({

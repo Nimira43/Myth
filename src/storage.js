@@ -5,7 +5,11 @@ import starter from './levels/starter.json'
 const KEY = 'myth.project.v1'
 
 export function normaliseProject(raw) {
-  const project = { version: 1, zones: {} }
+  const project = {
+    version: 1,
+    starterVersion: raw?.starterVersion ?? 1,
+    zones: {},
+  }
   for (const z of ZONES) {
     const levels = raw?.zones?.[z.id]
     project.zones[z.id] =
@@ -16,10 +20,26 @@ export function normaliseProject(raw) {
   return project
 }
 
+function mergeNewStarterLevels(project) {
+  const target = starter.starterVersion ?? 1
+  if ((project.starterVersion ?? 1) >= target) return project
+  for (const [zoneId, levels] of Object.entries(starter.zones ?? {})) {
+    const mine = project.zones[zoneId]
+    if (!mine) continue
+    levels.forEach((lvl, i) => {
+      if (!mine.some((m) => m.name === lvl.name))
+        mine.splice(Math.min(i, mine.length), 0, normaliseLevel(lvl))
+    })
+  }
+  project.starterVersion = target
+  return project
+}
+
 export function loadProject() {
   try {
     const saved = localStorage.getItem(KEY)
-    if (saved) return normaliseProject(JSON.parse(saved))
+    if (saved)
+      return mergeNewStarterLevels(normaliseProject(JSON.parse(saved)))
   } catch (err) {
     console.warn('Could not read saved project, using starter levels', err)
   }

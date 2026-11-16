@@ -1,0 +1,20 @@
+{
+  "image": "charon.png",
+  "frameWidth": 24,
+  "frameHeight": 32,
+  "facing": "right",
+  "animations": {
+    "idle": {
+      "row": 0,
+      "frames": 2,
+      "fps": 2,
+      "loop": true
+    },
+    "pole": {
+      "row": 1,
+      "frames": 4,
+      "fps": 5,
+      "loop": true
+    }
+  }
+}

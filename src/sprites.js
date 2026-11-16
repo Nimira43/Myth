@@ -9,11 +9,9 @@ export async function loadSheet(name) {
 }
 
 export async function loadAllSprites() {
-  const [sally, skeleton] = await Promise.all([
-    loadSheet('sally'),
-    loadSheet('skeleton'),
-  ])
-  return { sally, skeleton }
+  const names = ['sally', 'skeleton', 'charon', 'shade', 'cerberus']
+  const sheets = await Promise.all(names.map(loadSheet))
+  return Object.fromEntries(names.map((n, i) => [n, sheets[i]]))
 }
 
 export function frameAt(sheet, anim, t) {
