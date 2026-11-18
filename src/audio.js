@@ -15,6 +15,7 @@ export function thunder(volume = 0.6) {
   const len = Math.floor(ctx.sampleRate * dur)
   const buf = ctx.createBuffer(1, len, ctx.sampleRate)
   const data = buf.getChannelData(0)
+
   let last = 0
   const swells = [0, 0.3 + Math.random() * 0.4, 1 + Math.random()]
   for (let i = 0; i < len; i++) {

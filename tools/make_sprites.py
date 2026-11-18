@@ -1,3 +1,16 @@
+"""
+Myth — sprite-sheet generator.
+
+Draws the Skeleton Warrior and Sally Miller as small pixel-art rigs (bones/limbs
+as lines, heads and torsos as hand-placed bitmaps), then runs an automatic
+outline pass so everything reads clearly against any background.
+
+Usage:  python3 tools/make_sprites.py
+Output: public/sprites/<name>.png  +  public/sprites/<name>.json
+        tools/preview/<name>_x8.png  (enlarged preview, not used by the game)
+
+Every frame faces RIGHT. The game mirrors frames for left-facing movement.
+"""
 import json
 import math
 import os
@@ -581,9 +594,111 @@ def make_cerberus():
     build_sheet("cerberus", [("idle", idle, 3, True), ("run", run, 12, True), ("rest", rest, 1, False)], hexc("#000000"))
 
 
+# ================================================================ MINOTAUR
+# A bull's head on a man's body, in a Minoan kilt (Apollodorus, Ovid).
+BULL = hexc("#3a2418")
+BULL_HI = hexc("#5a3a26")
+BULL_DK = hexc("#22140c")
+HORN = hexc("#e4d8bc")
+HORN_DK = hexc("#a8987a")
+MSKIN = hexc("#8a5a3a")
+MSKIN_SH = hexc("#6a4228")
+KILT = hexc("#e8dcc4")
+KILT_RED = hexc("#a82a24")
+M_EYE = hexc("#ff3a1a")
+MW, MH = 32, 36
+
+BULL_HEAD = [
+    "..BBBB...",
+    ".BBBBBB..",
+    "BBBBBBBB.",
+    "BBBBBEBBB",
+    "BBBBBBBBB",
+    ".BBBBBBnn",
+    "..BBBBBnn",
+]
+MSKIN_HI = hexc("#a87048")
+MSKIN_FAR = hexc("#5a3820")
+
+
+def minotaur(pose):
+    f = Frame(MW, MH)
+    bob = pose.get("bob", 0)
+    hipx, hipy = 14 + pose.get("hipdx", 0), 23 + bob
+    lean = pose.get("lean", 0)
+    sh = (hipx + lean, hipy - 10)
+
+    # far leg and far arm
+    _, ff = limb(f, (hipx - 1, hipy), 6, pose["ff"], 6, pose["fk"], MSKIN_SH, thick=2)
+    f.line(ff, (ff[0] + 2, ff[1]), BULL_DK)
+    limb(f, (sh[0] - 1, sh[1] + 1), 5, pose["fa"], 5, pose["fe"], MSKIN_FAR, thick=2)
+
+    # torso: broad, muscled, wider at the shoulders
+    for y in range(int(sh[1]), hipy + 1):
+        t = (y - sh[1]) / max(1, hipy - sh[1])
+        half = 5 - t * 2
+        cx = sh[0] + (hipx - sh[0]) * t
+        for x in range(int(cx - half), int(cx + half) + 1):
+            f.put(x, y, MSKIN_SH if x < cx - half + 2 else MSKIN)
+    f.put(sh[0] + 2, sh[1] + 4, MSKIN_SH)
+    f.put(sh[0] + 1, sh[1] + 6, MSKIN_SH)
+    # Minoan kilt with a red border
+    f.rect(hipx - 5, hipy - 1, 11, 4, KILT)
+    f.rect(hipx - 5, hipy + 2, 11, 1, KILT_RED)
+    f.rect(hipx - 5, hipy - 2, 11, 1, KILT_RED)
+
+    # head at the front of the shoulders, lowered for the charge
+    hx = int(sh[0]) - 1 + pose.get("head_dx", 0)
+    hy = int(sh[1]) - 7 + pose.get("head_dy", 0)
+    f.line((hx + 1, hy + 2), (hx + 1, hy + 8), BULL_DK)    # thick neck and mane
+    f.line((hx + 2, hy + 3), (hx + 2, hy + 8), BULL)
+    f.bitmap(hx, hy, BULL_HEAD, {"B": BULL, "E": M_EYE, "n": BULL_HI})
+    # lyre-shaped horns: one sweeps back and up, one forward and up
+    f.line((hx + 2, hy + 1), (hx - 1, hy - 2), HORN_DK)
+    f.line((hx - 1, hy - 2), (hx - 1, hy - 4), HORN_DK)
+    f.line((hx + 5, hy), (hx + 7, hy - 3), HORN)
+    f.line((hx + 7, hy - 3), (hx + 9, hy - 4), HORN)
+
+    # near leg and near arm
+    _, nf = limb(f, (hipx + 1, hipy), 6, pose["nf"], 6, pose["nk"], MSKIN, thick=2)
+    f.line(nf, (nf[0] + 2, nf[1]), BULL_DK)
+    limb(f, (sh[0] + 1, sh[1] + 1), 5, pose["na"], 5, pose["ne"], MSKIN_HI, thick=2)
+    if pose.get("stars"):
+        for k, (sx, sy) in enumerate(((hx + 1, hy - 4), (hx + 6, hy - 6), (hx + 10, hy - 3))):
+            if (k + pose["stars"]) % 2:
+                f.put(sx, sy, hexc("#f0e080"))
+                f.put(sx - 1, sy, hexc("#a09040"))
+                f.put(sx + 1, sy, hexc("#a09040"))
+    return f
+
+
+def make_minotaur():
+    legs = [(28, 6, -25, -6, 0), (5, -25, 5, 30, -1),
+            (-25, -6, 28, 6, 0), (5, 30, 5, -25, -1)]
+    walk = []
+    for i, (nf, nk, ff, fk, bob) in enumerate(legs):
+        sw = 20 if i in (0, 1) else -20
+        walk.append(minotaur(dict(nf=nf, nk=nk, ff=ff, fk=fk, bob=bob, na=-sw, ne=-sw + 25, fa=sw, fe=sw + 25)))
+    paw = [
+        minotaur(dict(nf=10, nk=0, ff=-10, fk=0, na=40, ne=70, fa=-20, fe=10, head_dx=2, head_dy=3, lean=2)),
+        minotaur(dict(nf=-30, nk=20, ff=-10, fk=0, na=40, ne=70, fa=-20, fe=10, head_dx=2, head_dy=4, lean=2)),
+    ]
+    charge = []
+    for i, (nf, nk, ff, fk, bob) in enumerate(legs):
+        charge.append(minotaur(dict(nf=nf * 1.4, nk=nk, ff=ff * 1.4, fk=fk, bob=bob, na=-60, ne=-30, fa=-70, fe=-40,
+                                    head_dx=4, head_dy=5, lean=4)))
+    stunned = [
+        minotaur(dict(nf=6, nk=0, ff=-6, fk=0, na=10, ne=10, fa=-10, fe=-10, head_dx=-1, head_dy=1, stars=1)),
+        minotaur(dict(nf=6, nk=0, ff=-6, fk=0, na=12, ne=14, fa=-8, fe=-6, head_dx=0, head_dy=2, stars=2)),
+    ]
+    build_sheet("minotaur", [("walk", walk, 6, True), ("paw", paw, 6, True),
+                             ("charge", charge, 14, True), ("stunned", stunned, 4, True)], hexc("#000000"))
+
+
 if __name__ == "__main__":
     make_skeleton()
     make_sally()
     make_charon()
     make_shade()
     make_cerberus()
+    make_minotaur()

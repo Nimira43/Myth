@@ -102,6 +102,122 @@
         ]
       },
       {
+        "name": "The Labyrinth of Knossos",
+        "setting": "labyrinth",
+        "intro": "Daedalus built the Labyrinth for King Minos, so cunning that he could scarcely find his own way out. In its heart lives the Minotaur, fed on the youths of Athens. Ariadne's thread will lead you home, if you can keep it whole.",
+        "tiles": [
+          "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK",
+          "K.......C.......K....C....C....K",
+          "K.......C.......K....C....C....K",
+          "K.......C.......K....C....C....K",
+          "K.......C.......K....C....C....K",
+          "KKKKKKKKKKKKKHKKKKKHKKKKKKKKKKKK",
+          "K..........C.H.....H..C........K",
+          "K..........C.H.....H..C........K",
+          "K..........C.H.....H..C........K",
+          "K..........C.H.....H..C........K",
+          "KKKKHKKKKKKKKKKKKKKKKKKKKKKHKKKK",
+          "K...H..C........K...C......H...K",
+          "K...H..C........K...C......H...K",
+          "K...H..C........K...C......H...K",
+          "K...H..C........K...C......H...K",
+          "KKKHKKKKKKKKHKKKKKKKKKKKKKKKHKKK",
+          "K..H....K...H..........K....H..K",
+          "K..H....K...H..........K....H..K",
+          "K..H....K...H..........K....H..K",
+          "KKKKKKKKKKKKKKKKKKKKKKKKKKKKKKKK"
+        ],
+        "entities": [
+          {
+            "type": "exit",
+            "c": 1,
+            "r": 4,
+            "style": "minoan"
+          },
+          {
+            "type": "spawn",
+            "c": 3,
+            "r": 4
+          },
+          {
+            "type": "labrys",
+            "c": 29,
+            "r": 4
+          },
+          {
+            "type": "labrys",
+            "c": 6,
+            "r": 18
+          },
+          {
+            "type": "labrys",
+            "c": 21,
+            "r": 18
+          },
+          {
+            "type": "labrys",
+            "c": 25,
+            "r": 18
+          },
+          {
+            "type": "minotaur",
+            "c": 22,
+            "r": 9,
+            "dir": -1
+          },
+          {
+            "type": "torch",
+            "c": 6,
+            "r": 2
+          },
+          {
+            "type": "torch",
+            "c": 24,
+            "r": 2
+          },
+          {
+            "type": "torch",
+            "c": 8,
+            "r": 7
+          },
+          {
+            "type": "torch",
+            "c": 17,
+            "r": 7
+          },
+          {
+            "type": "torch",
+            "c": 25,
+            "r": 7
+          },
+          {
+            "type": "torch",
+            "c": 10,
+            "r": 12
+          },
+          {
+            "type": "torch",
+            "c": 23,
+            "r": 12
+          },
+          {
+            "type": "torch",
+            "c": 5,
+            "r": 16
+          },
+          {
+            "type": "torch",
+            "c": 16,
+            "r": 16
+          },
+          {
+            "type": "torch",
+            "c": 26,
+            "r": 16
+          }
+        ]
+      },
+      {
         "name": "The Field of Ares",
         "tiles": [
           "................................",
@@ -185,5 +301,5 @@
       }
     ]
   },
-  "starterVersion": 2
+  "starterVersion": 3
 }

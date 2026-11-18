@@ -9,7 +9,14 @@ export async function loadSheet(name) {
 }
 
 export async function loadAllSprites() {
-  const names = ['sally', 'skeleton', 'charon', 'shade', 'cerberus']
+  const names = [
+    'sally',
+    'skeleton',
+    'charon',
+    'shade',
+    'cerberus',
+    'minotaur',
+  ]
   const sheets = await Promise.all(names.map(loadSheet))
   return Object.fromEntries(names.map((n, i) => [n, sheets[i]]))
 }

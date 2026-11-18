@@ -18,9 +18,13 @@ import {
   drawRelic,
   drawSeed,
   drawObol,
+  drawLabrys,
+  drawTorch,
   drawThrones,
   drawFerry,
   drawCerberus,
+  drawDarkness,
+  drawThread,
   createWeather,
   updateWeather,
   drawWeatherBack,
@@ -53,6 +57,18 @@ const CERBERUS = {
   w: 30,
   h: 20,
 }
+const MINOTAUR = {
+  walk: 0.7,
+  charge: 3.2,
+  sight: 9 * TILE,
+  paw: 36,
+  stunWall: 100,
+  stunEdge: 50,
+  w: 16,
+  h: 32,
+}
+const THREAD_STEP = 6
+const LIGHT = { sally: 62, torch: 46, exit: 40 }
 
 const overlap = (a, b) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t
 
@@ -68,7 +84,9 @@ export class Game {
     this.setting = this.source.setting ?? 'storm'
     this.weather = createWeather(
       7,
-      this.setting === 'underworld' ? 'underworld' : 'storm',
+      ['underworld', 'labyrinth'].includes(this.setting)
+        ? this.setting
+        : 'storm',
     )
     this.intro = { t: 0 }
     unlockAudio()
@@ -94,10 +112,13 @@ export class Game {
       t: 0,
       moving: false,
     }
-    this.items = [...of('relic'), ...of('seed'), ...of('obol')].map((e) => ({
-      ...e,
-      got: false,
-    }))
+    this.items = [
+      ...of('relic'),
+      ...of('seed'),
+      ...of('obol'),
+      ...of('labrys'),
+    ].map((e) => ({ ...e, got: false }))
+    this.torches = of('torch')
     this.obols = 0
     this.seedsTotal = of('seed').length
     this.thrones = ents.find((e) => e.type === 'thrones') ?? null
@@ -148,8 +169,27 @@ export class Game {
       }
     })
 
+    this.minotaurs = of('minotaur').map((e) => ({
+      x: e.c * TILE + TILE,
+      y: (e.r + 1) * TILE,
+      dir: (e.dir ?? 1) < 0 ? -1 : 1,
+      state: 'patrol',
+      timer: 0,
+      vy: 0,
+      t: 0,
+    }))
+
+    this.thread = null
+    if (this.setting === 'labyrinth') {
+      const anchor = this.exit
+        ? { x: this.exit.c * TILE + TILE, y: (this.exit.r + 1) * TILE - 8 }
+        : { x: this.hero.x, y: this.hero.y - 8 }
+      this.thread = { points: [anchor], broken: false }
+    }
+
     this.msg = null
     this.thronesWarned = false
+    this.exitWarned = false
     this.status = 'playing'
     this.timer = 0
   }
@@ -162,12 +202,16 @@ export class Game {
       relics: got('relic'),
       relicsTotal: all('relic'),
       seeds: got('seed'),
+      axes: got('labrys'),
+      axesTotal: all('labrys'),
     }
   }
 
   get exitOpen() {
     const c = this.collected
     if (c.relics < c.relicsTotal) return false
+    if (c.axes < c.axesTotal) return false
+    if (this.thread && this.thread.broken) return false
     if (this.thrones) return this.offered
     return c.seeds >= this.seedsTotal
   }
@@ -185,7 +229,7 @@ export class Game {
     if (this.intro && this.intro.t > 20) {
       this.intro = null
       return
-    } // any key dismisses the title card
+    }
     if (e.code === 'KeyR') {
       this.reset()
       return
@@ -227,8 +271,8 @@ export class Game {
     const b = this.behaviour(c, r)
     if (b === 'solid' || b === 'platform' || b === 'crumble' || b === 'slow')
       return true
-    if (b === 'ladder') return this.code(c, r - 1) !== 'H' // top rung
-    if (b === 'tree') return this.code(c, r - 1) !== 'T' // canopy
+    if (b === 'ladder') return this.code(c, r - 1) !== 'H'
+    if (b === 'tree') return this.code(c, r - 1) !== 'T'
     return false
   }
 
@@ -289,6 +333,8 @@ export class Game {
     this.updateSkeletons()
     this.updateShades()
     this.updateCerberi()
+    this.updateMinotaurs()
+    this.updateThread()
     this.checkPickupsAndDanger()
   }
 
@@ -553,6 +599,126 @@ export class Game {
     }
   }
 
+  updateMinotaurs() {
+    const h = this.hero
+    const { w, h: mh } = MINOTAUR
+    for (const m of this.minotaurs) {
+      m.t++
+      if (!this.supported(m.x, m.y, w)) {
+        m.vy = Math.min(m.vy + PHYSICS.gravity, PHYSICS.maxFall)
+        const ny = m.y + m.vy
+        const rowTop = Math.floor(ny / TILE) * TILE
+        if (m.y <= rowTop && ny >= rowTop && this.supported(m.x, rowTop, w)) {
+          m.y = rowTop
+          m.vy = 0
+        } else m.y = ny
+        continue
+      }
+      const ahead = (speed) => {
+        const ac = Math.floor((m.x + m.dir * (w / 2 + speed)) / TILE)
+        const wall =
+          this.isSolid(ac, Math.floor((m.y - 1) / TILE)) ||
+          this.isSolid(ac, Math.floor((m.y - mh + 2) / TILE))
+        const floor = this.isStandable(ac, m.y / TILE)
+        return { wall, floor }
+      }
+      switch (m.state) {
+        case 'patrol': {
+          const a = ahead(MINOTAUR.walk)
+          if (a.wall || !a.floor) m.dir = -m.dir
+          else m.x += m.dir * MINOTAUR.walk
+          if (this.status === 'playing' && this.canSee(m)) {
+            m.state = 'paw'
+            m.timer = MINOTAUR.paw
+          }
+          break
+        }
+        case 'paw':
+          if (--m.timer <= 0) m.state = 'charge'
+          break
+        case 'charge': {
+          const a = ahead(MINOTAUR.charge)
+          if (a.wall || !a.floor) {
+            m.state = 'stunned'
+            m.timer = a.wall ? MINOTAUR.stunWall : MINOTAUR.stunEdge
+            if (a.wall)
+              this.say('The Minotaur crashes into the wall, dazed.', 100)
+          } else {
+            m.x += m.dir * MINOTAUR.charge
+          }
+          break
+        }
+        case 'stunned':
+          if (--m.timer <= 0) {
+            m.state = 'patrol'
+            m.dir = -m.dir
+          }
+          break
+      }
+      if (this.thread) this.trampleThread(m)
+    }
+  }
+
+  canSee(m) {
+    const h = this.hero
+    const dx = h.x - m.x
+    if (Math.sign(dx) !== m.dir || Math.abs(dx) > MINOTAUR.sight) return false
+    if (Math.abs(h.y - m.y) > 20) return false
+    const r = Math.floor((m.y - 8) / TILE)
+    const c0 = Math.floor(Math.min(h.x, m.x) / TILE),
+      c1 = Math.floor(Math.max(h.x, m.x) / TILE)
+    for (let c = c0; c <= c1; c++) if (this.isSolid(c, r)) return false
+    return true
+  }
+
+  trampleThread(m) {
+    const t = this.thread
+    const box = {
+      l: m.x - MINOTAUR.w / 2,
+      r: m.x + MINOTAUR.w / 2,
+      t: m.y - MINOTAUR.h,
+      b: m.y,
+    }
+    for (let i = 1; i < t.points.length; i++) {
+      const p = t.points[i]
+      if (p.x >= box.l && p.x <= box.r && p.y >= box.t && p.y <= box.b) {
+        const wasWhole = !t.broken
+        t.points.length = i
+        t.broken = true
+        if (wasWhole)
+          this.say(
+            'The Minotaur has trampled the thread! Find the loose end.',
+            200,
+          )
+        return
+      }
+    }
+  }
+
+  updateThread() {
+    const t = this.thread
+    if (!t || this.status !== 'playing') return
+    const h = this.hero
+    const here = { x: h.x, y: h.y - 8 }
+    const pts = t.points
+    const last = pts[pts.length - 1]
+    const d = Math.hypot(here.x - last.x, here.y - last.y)
+    if (t.broken) {
+      if (d < 10) {
+        t.broken = false
+        this.say('You find the loose end, and take up the thread again.', 140)
+      }
+      return
+    }
+    for (let k = pts.length - 4; k >= 0; k--) {
+      if (Math.hypot(here.x - pts[k].x, here.y - pts[k].y) < 5) {
+        pts.length = k + 1
+        return
+      }
+    }
+    if (d > THREAD_STEP) pts.push(here)
+  }
+
   checkPickupsAndDanger() {
     const h = this.hero
     const box = {
@@ -657,6 +823,18 @@ export class Game {
         return
       }
     }
+    for (const m of this.minotaurs) {
+      const mb = {
+        l: m.x - MINOTAUR.w / 2,
+        r: m.x + MINOTAUR.w / 2,
+        t: m.y - MINOTAUR.h + 4,
+        b: m.y,
+      }
+      if (overlap(inner, mb)) {
+        this.die()
+        return
+      }
+    }
     for (const cb of this.cerberi) {
       const half = CERBERUS.w / 2
       const cbx = {
@@ -671,14 +849,26 @@ export class Game {
       }
     }
 
-    if (this.exit && this.exitOpen) {
+    if (this.exit) {
       const eb = {
         l: this.exit.c * TILE + 8,
         r: this.exit.c * TILE + 24,
         t: (this.exit.r - 1) * TILE + 8,
         b: (this.exit.r + 1) * TILE,
       }
-      if (overlap(box, eb)) this.status = 'won'
+      if (overlap(box, eb)) {
+        if (this.exitOpen) this.status = 'won'
+        else if (!this.exitWarned && this.thread) {
+          this.exitWarned = true
+          const c = this.collected
+          if (c.axes < c.axesTotal)
+            this.say('The double axes still lie somewhere in the dark.')
+          else if (this.thread.broken)
+            this.say('Without the whole thread, the way out cannot be found.')
+        }
+      } else {
+        this.exitWarned = false
+      }
     }
   }
 
@@ -706,10 +896,12 @@ export class Game {
         f,
         this.exit.style,
       )
+    for (const t of this.torches) drawTorch(ctx, t.c, t.r, f)
     for (const it of this.items) {
       if (it.got) continue
       if (it.type === 'relic') drawRelic(ctx, it.c, it.r, f)
       else if (it.type === 'seed') drawSeed(ctx, it.c, it.r, f)
+      else if (it.type === 'labrys') drawLabrys(ctx, it.c, it.r, f)
       else drawObol(ctx, it.c, it.r, f)
     }
     for (const fy of this.ferries)
@@ -736,6 +928,18 @@ export class Game {
         s.dir < 0,
       )
     }
+    for (const m of this.minotaurs) {
+      const anim = m.state === 'patrol' ? 'walk' : m.state
+      drawSprite(
+        ctx,
+        this.sprites.minotaur,
+        anim,
+        frameAt(this.sprites.minotaur, anim, m.t),
+        m.x,
+        m.y,
+        m.dir < 0,
+      )
+    }
     this.drawHero(ctx)
     for (const s of this.shades) {
       drawSprite(
@@ -748,6 +952,7 @@ export class Game {
         this.hero.x < s.x,
       )
     }
+    if (this.setting === 'labyrinth') this.drawLabyrinthLight(ctx)
     drawWeatherFront(ctx, this.weather)
     this.drawHud(ctx)
 
@@ -772,10 +977,47 @@ export class Game {
     }
   }
 
+  drawLabyrinthLight(ctx) {
+    const f = this.frame
+    const lights = [{ x: this.hero.x, y: this.hero.y - 16, r: LIGHT.sally }]
+    for (const t of this.torches) {
+      lights.push({
+        x: t.c * TILE + 8,
+        y: t.r * TILE + 4,
+        r:
+          LIGHT.torch + Math.sin(f / 4 + t.c) * 2 + Math.sin(f / 7.3 + t.r) * 2,
+        warm: true,
+      })
+    }
+    if (this.exit && this.exitOpen)
+      lights.push({
+        x: this.exit.c * TILE + TILE,
+        y: this.exit.r * TILE,
+        r: LIGHT.exit,
+        warm: true,
+      })
+    drawDarkness(ctx, lights)
+    if (this.thread) {
+      const tail = this.thread.broken
+        ? null
+        : { x: this.hero.x, y: this.hero.y - 8 }
+      drawThread(ctx, this.thread.points, tail, this.thread.broken, f)
+    }
+    for (const m of this.minotaurs) {
+      const ex =
+        m.x + m.dir * (m.state === 'charge' || m.state === 'paw' ? 9 : 6)
+      const ey = m.y - (m.state === 'charge' || m.state === 'paw' ? 24 : 28)
+      ctx.fillStyle = 'rgba(255,60,30,0.9)'
+      ctx.fillRect(Math.round(ex), Math.round(ey), 1, 1)
+      ctx.fillStyle = 'rgba(255,60,30,0.25)'
+      ctx.fillRect(Math.round(ex) - 1, Math.round(ey) - 1, 3, 3)
+    }
+  }
+
   drawHero(ctx) {
     const h = this.hero
     const sheet = this.sprites.sally
-    if (this.status === 'dead' && Math.floor(this.timer / 4) % 2) return // flicker
+    if (this.status === 'dead' && Math.floor(this.timer / 4) % 2) return
     let anim = 'idle',
       fr = frameAt(sheet, 'idle', h.t)
     if (h.state === 'climb') {
@@ -790,7 +1032,7 @@ export class Game {
     } else if (h.moving) {
       anim = 'walk'
       fr = Math.floor(h.x / 4) % 4
-    } 
+    }
     drawSprite(ctx, sheet, anim, fr, h.x, h.y, h.dir < 0)
   }
 
@@ -847,6 +1089,9 @@ export class Game {
     const counters = []
     if (c.relicsTotal) counters.push(`RELICS ${c.relics}/${c.relicsTotal}`)
     if (this.seedsTotal) counters.push(`SEEDS ${c.seeds}/${this.seedsTotal}`)
+    if (c.axesTotal) counters.push(`AXES ${c.axes}/${c.axesTotal}`)
+    if (this.thread)
+      counters.push(this.thread.broken ? 'THREAD CUT' : 'THREAD WHOLE')
     if (this.ferries.length || this.items.some((i) => i.type === 'obol'))
       counters.push(`OBOLS ${this.obols}`)
     ctx.textAlign = 'right'

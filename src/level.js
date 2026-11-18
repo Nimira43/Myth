@@ -4,6 +4,7 @@ import { EMPTY, TILE_BY_CODE } from './tiles.js'
 export const SETTINGS = [
   { id: 'storm', name: 'Outdoors – storm' },
   { id: 'underworld', name: 'Underworld' },
+  { id: 'labyrinth', name: 'Labyrinth – torchlit, with Ariadne\u2019s thread' },
 ]
 
 export const ENTITY_TYPES = [
@@ -22,7 +23,7 @@ export const ENTITY_TYPES = [
     unique: true,
     size: [2, 2],
     toggle: 'style',
-    hint: 'Opens when the level is solved. Click again to switch temple / bronze gates',
+    hint: 'Opens when the level is solved. Click again to cycle: temple / bronze gates / Minoan doorway',
   },
   {
     type: 'thrones',
@@ -39,6 +40,14 @@ export const ENTITY_TYPES = [
     unique: false,
     size: [3, 1],
     hint: 'Place just above water. Costs one obol per crossing',
+  },
+  {
+    type: 'torch',
+    group: 'Set pieces',
+    name: 'Torch',
+    unique: false,
+    size: [1, 1],
+    hint: 'A wall torch: lights the dark in torchlit (Labyrinth) levels',
   },
   {
     type: 'relic',
@@ -63,6 +72,14 @@ export const ENTITY_TYPES = [
     unique: false,
     size: [1, 1],
     hint: "Silver coin: Charon's fare",
+  },
+  {
+    type: 'labrys',
+    group: 'Collectables',
+    name: 'Labrys',
+    unique: false,
+    size: [1, 1],
+    hint: 'The bronze double axe of Knossos. Collect them all to open the exit',
   },
   {
     type: 'skeleton',
@@ -90,6 +107,15 @@ export const ENTITY_TYPES = [
     size: [2, 2],
     toggle: 'dir',
     hint: 'Chained. Lunges only when Sally heads for the exit, then rests. Click again to face the other way',
+  },
+  {
+    type: 'minotaur',
+    group: 'Guardians',
+    name: 'Minotaur',
+    unique: false,
+    size: [2, 2],
+    toggle: 'dir',
+    hint: 'Patrols his floor. Spots Sally ahead, paws the ground, charges, and stuns himself on walls. Tramples Ariadne\u2019s thread',
   },
 ]
 
@@ -183,7 +209,11 @@ export function validateLevel(level) {
   }
   if (count('ferry') && !count('obol'))
     problems.push('A ferry but no obols to pay Charon')
-  if (!count('relic') && !count('seed'))
+  if (!count('relic') && !count('seed') && !count('labrys'))
     problems.push('Nothing to collect – the exit starts open')
+  if (level.setting === 'labyrinth' && !count('torch'))
+    problems.push(
+      'Torchlit level with no torches: only Sally\u2019s own light',
+    )
   return problems
 }

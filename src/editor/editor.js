@@ -393,9 +393,12 @@ export class Editor {
       'relic',
       'seed',
       'obol',
+      'labrys',
+      'torch',
       'skeleton',
       'shade',
       'cerberus',
+      'minotaur',
       'ferry',
     ]
       .filter((t) => counts[t])
@@ -457,7 +460,6 @@ export class Editor {
     e.preventDefault()
 
     if (e.altKey || e.button === 1) {
-      // eyedropper
       const code = getTile(this.level, cell.c, cell.r)
       if (code !== EMPTY) this.select({ kind: 'tile', code })
       return
@@ -564,16 +566,24 @@ export class Editor {
     if (existing) {
       if (def.toggle === 'dir')
         existing.dir = -(existing.dir ?? this.defaultDir(type))
-      if (def.toggle === 'style')
-        existing.style = existing.style === 'gates' ? 'temple' : 'gates'
+      if (def.toggle === 'style') {
+        const styles = ['temple', 'gates', 'minoan']
+        existing.style =
+          styles[
+            (styles.indexOf(existing.style ?? 'temple') + 1) % styles.length
+          ]
+      }
       return
     }
     if (def.unique) this.level.entities = ents.filter((en) => en.type !== type)
     const en = { type, c, r }
     if (def.toggle === 'dir') en.dir = this.defaultDir(type)
-    if (type === 'exit')
-      en.style = this.level.setting === 'underworld' ? 'gates' : 'temple'
+    if (type === 'exit') en.style = this.exitStyleFor(this.level.setting)
     this.level.entities.push(en)
+  }
+
+  exitStyleFor(setting) {
+    return { underworld: 'gates', labyrinth: 'minoan' }[setting] ?? 'temple'
   }
 
   defaultDir(type) {
@@ -659,8 +669,12 @@ export class Editor {
       if (en.type === 'shade')
         note =
           (en.dir ?? 1) < 0 ? ' (drifting up first)' : ' (drifting down first)'
+      if (en.type === 'minotaur')
+        note = (en.dir ?? 1) < 0 ? ' (facing left)' : ' (facing right)'
       if (en.type === 'exit')
-        note = en.style === 'gates' ? ' (bronze gates)' : ' (temple)'
+        note =
+          { gates: ' (bronze gates)', minoan: ' (Minoan doorway)' }[en.style] ??
+          ' (temple)'
       parts.push(def.name + note)
     }
     const code = getTile(this.level, c, r)
@@ -670,7 +684,9 @@ export class Editor {
   }
 
   tick() {
-    const mode = this.level.setting === 'underworld' ? 'underworld' : 'storm'
+    const mode = ['underworld', 'labyrinth'].includes(this.level.setting)
+      ? this.level.setting
+      : 'storm'
     if (this.weather.mode !== mode) this.weather = createWeather(3, mode)
     if (this.storm) updateWeather(this.weather)
   }
@@ -757,7 +773,7 @@ export class Editor {
             c: Math.min(c, COLS - def.size[0]),
             r: Math.max(r, def.size[1] - 1),
             dir: this.defaultDir(def.type),
-            style: this.level.setting === 'underworld' ? 'gates' : 'temple',
+            style: this.exitStyleFor(this.level.setting),
           },
           this.zone,
           this.sprites,
@@ -778,4 +794,3 @@ function escapeHtml(s) {
     (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch],
   )
 }
-

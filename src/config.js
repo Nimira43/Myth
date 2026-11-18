@@ -1,7 +1,7 @@
 export const TILE = 16
 export const COLS = 32
 export const ROWS = 20
-export const VIEW_W = COLS * TILE   
+export const VIEW_W = COLS * TILE  
 export const VIEW_H = ROWS * TILE   
 export const HUD_H = 32             
 
