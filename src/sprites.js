@@ -16,6 +16,9 @@ export async function loadAllSprites() {
     'shade',
     'cerberus',
     'minotaur',
+    'sisyphus',
+    'tantalus',
+    'eurydice',
   ]
   const sheets = await Promise.all(names.map(loadSheet))
   return Object.fromEntries(names.map((n, i) => [n, sheets[i]]))

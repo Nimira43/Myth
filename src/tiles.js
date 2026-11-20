@@ -104,6 +104,13 @@ export const TILES = [
     draw: drawCypress,
   },
   {
+    code: 'r',
+    name: 'Scree',
+    category: 'Structure',
+    behaviour: 'crumble',
+    draw: drawScree,
+  },
+  {
     code: 'K',
     name: 'Labyrinth Wall',
     category: 'Structure',
@@ -132,8 +139,7 @@ export const TILE_HINTS = {
   decor: 'Decoration only',
 }
 
-const GROUNDISH = new Set(['g', 'm', 's', 'w', 'd', '#', 'o', 'M', 'K'])
-
+const GROUNDISH = new Set(['g', 'm', 's', 'w', 'd', '#', 'o', 'M', 'K', 'r'])
 const cache = new Map()
 
 function hash(x, y) {
@@ -259,9 +265,9 @@ function drawMud(g, n, rand) {
   speckle(g, rand, 0, 0, TILE, h, ['#1a110b', '#3a2a1d', '#22170f'], 18)
   if (!(GROUNDISH.has(n.up) || n.up === 'm')) {
     px(g, 0, 0, TILE, 2, '#3e2e20')
-    px(g, 2 + Math.floor(rand() * 10), 0, 2, 1, '#5a6070')
+    px(g, 2 + Math.floor(rand() * 10), 0, 2, 1, '#5a6070') // wet sheen
     for (let x = 1; x < TILE; x += 4 + Math.floor(rand() * 3))
-      px(g, x, 2, 2, 1, '#120c08')
+      px(g, x, 2, 2, 1, '#120c08') // cracks
   }
   raggedUnderside(g, rand, h, '#1a110b')
 }
@@ -282,8 +288,8 @@ function drawSwamp(g, n, rand) {
     px(g, 0, 0, TILE, 3, '#2e3a22')
     for (let x = 0; x < TILE; x += 3)
       if (rand() < 0.6) px(g, x, 1, 2, 1, '#3e4c2c')
-    if (rand() < 0.7) px(g, 3 + Math.floor(rand() * 9), -4, 1, 4, '#3a3420')
-    if (rand() < 0.5) px(g, 2 + Math.floor(rand() * 10), 0, 2, 1, '#6a7a52')
+    if (rand() < 0.7) px(g, 3 + Math.floor(rand() * 9), -4, 1, 4, '#3a3420') // dead reed
+    if (rand() < 0.5) px(g, 2 + Math.floor(rand() * 10), 0, 2, 1, '#6a7a52') // bubble
   }
   raggedUnderside(g, rand, h, '#141a0e')
 }
@@ -401,7 +407,6 @@ function drawTree(g, n, rand) {
       g.lineTo(x + dx + (dx > 0 ? 2 : -2), y + dy - 2)
       g.stroke()
     }
-
     for (let x = -4; x < 20; x++) {
       const t = 1 + (Math.abs(x - 7) < 4 ? 1 : 0) + (rand() < 0.25 ? 1 : 0)
       px(g, x, 2 - (t > 2 ? 1 : 0), 1, t, '#2a2118')
@@ -494,6 +499,28 @@ function drawCypress(g, n, rand) {
   }
 }
 
+function drawScree(g, n, rand) {
+  const h = ledgeHeight(n, 'r')
+  px(g, 0, 0, TILE, h, '#3e3c3a')
+  for (let i = 0; i < 9; i++) {
+    const x = Math.floor(rand() * 14),
+      y = Math.floor(rand() * (h - 2))
+    px(
+      g,
+      x,
+      y,
+      2 + Math.floor(rand() * 2),
+      2,
+      rand() < 0.5 ? '#5a5652' : '#2c2a28',
+    )
+  }
+  if (!GROUNDISH.has(n.up)) {
+    px(g, 0, 0, TILE, 1, '#6a6660')
+    for (let x = 2; x < TILE; x += 5) px(g, x, -1, 2, 1, '#4e4a46')
+  }
+  raggedUnderside(g, rand, h, '#2c2a28')
+}
+
 function drawLabyrinthWall(g, n, rand) {
   px(g, 0, 0, TILE, TILE, '#5a4630')
   speckle(g, rand, 0, 0, TILE, TILE, ['#4c3a26', '#685238', '#52402a'], 16)
@@ -506,8 +533,8 @@ function drawLabyrinthWall(g, n, rand) {
   if (rand() < 0.22) {
     const x = 3 + Math.floor(rand() * 7),
       y = rand() < 0.5 ? 2 : 10
-    px(g, x, y, 1, 4, '#3a2c1c')
-    px(g, x - 2, y, 2, 2, '#3a2c1c')
+    px(g, x, y, 1, 4, '#3a2c1c') 
+    px(g, x - 2, y, 2, 2, '#3a2c1c') 
     px(g, x + 1, y, 2, 2, '#3a2c1c')
   }
 }

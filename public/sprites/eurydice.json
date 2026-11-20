@@ -1,0 +1,14 @@
+{
+  "image": "eurydice.png",
+  "frameWidth": 24,
+  "frameHeight": 32,
+  "facing": "right",
+  "animations": {
+    "drift": {
+      "row": 0,
+      "frames": 4,
+      "fps": 5,
+      "loop": true
+    }
+  }
+}

@@ -102,6 +102,164 @@
         ]
       },
       {
+        "name": "The Crag of Tartarus",
+        "setting": "underworld",
+        "intro": "Tartarus lies as far beneath Hades as the sky is above the earth. Here Sisyphus pushes his stone for ever, Ixion burns upon his wheel, and Tantalus stands in water he can never drink, beneath fruit he can never reach.",
+        "tiles": [
+          "................................",
+          "................................",
+          "................................",
+          "................................",
+          "MMMHMMMMMM...MMM..oHoooooooooooo",
+          "...H........o......H............",
+          "...H........o......H............",
+          "...H........o......H............",
+          "oooooooooHo..oooooooooooooHo....",
+          ".........H.o..............H.....",
+          ".........H.o..............H.....",
+          ".........H.o..............H.....",
+          "ooHoooooooo......oHooooooooooooo",
+          "..H......o........H.............",
+          "..H......o........H.............",
+          "..H......o........H.............",
+          "oooooooHo...oooooooooooooooHo...",
+          ".......H...................H....",
+          ".......H...................H....",
+          "oo~~~~oooooooooooooooooooooooooo"
+        ],
+        "entities": [
+          {
+            "type": "spawn",
+            "c": 29,
+            "r": 18
+          },
+          {
+            "type": "exit",
+            "c": 1,
+            "r": 3,
+            "style": "cave"
+          },
+          {
+            "type": "sisyphus",
+            "c": 28,
+            "r": 3,
+            "dir": -1
+          },
+          {
+            "type": "wheel",
+            "c": 4,
+            "r": 7,
+            "dir": 1
+          },
+          {
+            "type": "tantalus",
+            "c": 3,
+            "r": 18
+          },
+          {
+            "type": "fruit",
+            "c": 5,
+            "r": 15
+          },
+          {
+            "type": "fruit",
+            "c": 6,
+            "r": 11
+          },
+          {
+            "type": "fruit",
+            "c": 5,
+            "r": 7
+          },
+          {
+            "type": "fruit",
+            "c": 22,
+            "r": 11
+          }
+        ]
+      },
+      {
+        "name": "Where Orpheus Looked Back",
+        "setting": "ascent",
+        "intro": "Orpheus sang until the dead wept, and Hades gave Eurydice back on one condition: that he lead her up into the light and never look back. At the very threshold, he turned. Walk the path he walked, and do not turn.",
+        "tiles": [
+          "................................",
+          "................................",
+          "................................",
+          "................................",
+          "ooooooooooo..ooooooooorrrrooooHo",
+          "..............................H.",
+          "..............................H.",
+          "..............................H.",
+          "..............................H.",
+          "oHoooo..ooooooorrrrroooooooooooo",
+          ".H..............................",
+          ".H..............................",
+          ".H..............................",
+          ".H..............................",
+          "oooooooooooo..oooorrrrooooooooHo",
+          "..............................H.",
+          "..............................H.",
+          "..............................H.",
+          "..............................H.",
+          "ooooooooorrrrooooooooolloooooooo"
+        ],
+        "entities": [
+          {
+            "type": "spawn",
+            "c": 3,
+            "r": 18
+          },
+          {
+            "type": "eurydice",
+            "c": 1,
+            "r": 18
+          },
+          {
+            "type": "exit",
+            "c": 1,
+            "r": 3,
+            "style": "cave"
+          },
+          {
+            "type": "shade",
+            "c": 17,
+            "r": 17,
+            "dir": -1
+          },
+          {
+            "type": "shade",
+            "c": 25,
+            "r": 12,
+            "dir": 1
+          },
+          {
+            "type": "shade",
+            "c": 5,
+            "r": 12,
+            "dir": -1
+          },
+          {
+            "type": "shade",
+            "c": 10,
+            "r": 7,
+            "dir": 1
+          },
+          {
+            "type": "shade",
+            "c": 27,
+            "r": 7,
+            "dir": -1
+          },
+          {
+            "type": "shade",
+            "c": 18,
+            "r": 2,
+            "dir": 1
+          }
+        ]
+      },
+      {
         "name": "The Labyrinth of Knossos",
         "setting": "labyrinth",
         "intro": "Daedalus built the Labyrinth for King Minos, so cunning that he could scarcely find his own way out. In its heart lives the Minotaur, fed on the youths of Athens. Ariadne's thread will lead you home, if you can keep it whole.",
@@ -301,5 +459,5 @@
       }
     ]
   },
-  "starterVersion": 3
+  "starterVersion": 4
 }

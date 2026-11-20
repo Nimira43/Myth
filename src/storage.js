@@ -5,12 +5,17 @@ import starter from './levels/starter.json'
 const KEY = 'myth.project.v1'
 
 export function normaliseProject(raw) {
-  const project = { version: 1, starterVersion: raw?.starterVersion ?? 1, zones: {} }
+  const project = {
+    version: 1,
+    starterVersion: raw?.starterVersion ?? 1,
+    zones: {},
+  }
   for (const z of ZONES) {
     const levels = raw?.zones?.[z.id]
-    project.zones[z.id] = Array.isArray(levels) && levels.length
-      ? levels.map(normaliseLevel)
-      : [blankLevel(`${z.name} 1`)]
+    project.zones[z.id] =
+      Array.isArray(levels) && levels.length
+        ? levels.map(normaliseLevel)
+        : [blankLevel(`${z.name} 1`)]
   }
   return project
 }
@@ -22,7 +27,8 @@ function mergeNewStarterLevels(project) {
     const mine = project.zones[zoneId]
     if (!mine) continue
     levels.forEach((lvl, i) => {
-      if (!mine.some((m) => m.name === lvl.name)) mine.splice(Math.min(i, mine.length), 0, normaliseLevel(lvl))
+      if (!mine.some((m) => m.name === lvl.name))
+        mine.splice(Math.min(i, mine.length), 0, normaliseLevel(lvl))
     })
   }
   project.starterVersion = target
@@ -32,7 +38,8 @@ function mergeNewStarterLevels(project) {
 export function loadProject() {
   try {
     const saved = localStorage.getItem(KEY)
-    if (saved) return mergeNewStarterLevels(normaliseProject(JSON.parse(saved)))
+    if (saved)
+      return mergeNewStarterLevels(normaliseProject(JSON.parse(saved)))
   } catch (err) {
     console.warn('Could not read saved project, using starter levels', err)
   }
@@ -55,7 +62,9 @@ export function resetProject() {
 }
 
 export function downloadJSON(data, filename) {
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
+    type: 'application/json',
+  })
   const a = document.createElement('a')
   a.href = URL.createObjectURL(blob)
   a.download = filename

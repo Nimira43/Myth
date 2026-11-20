@@ -695,6 +695,106 @@ def make_minotaur():
                              ("charge", charge, 14, True), ("stunned", stunned, 4, True)], hexc("#000000"))
 
 
+# ================================================================ SOULS OF TARTARUS
+SOUL = hexc("#9c9084")
+SOUL_SH = hexc("#6e645a")
+SOUL_HI = hexc("#b8ae a2".replace(" ", ""))
+SOUL_HAIR = hexc("#3a3430")
+SOUL_CLOTH = hexc("#4a3e34")
+SOUL_EYE = hexc("#1a1414")
+
+SOUL_HEAD = [
+    ".HHHH.",
+    "HHHHHH",
+    "HHSSSS",
+    "HSSSES",
+    "HSSSSS",
+    ".SSSB.",
+    "..BBB.",
+]
+
+
+def soul(pose, beard=True):
+    """A punished soul of Tartarus: grey-skinned, in a ragged loincloth."""
+    f = Frame()
+    hipx, hipy = 12 + pose.get("hipdx", 0), 21 + pose.get("bob", 0)
+    lean = pose.get("lean", 0)
+    sh = (hipx + lean, hipy - 9)
+    limb(f, (hipx - 1, hipy), 5, pose["ff"], 6, pose["fk"], SOUL_SH, thick=2)
+    arm_root = (sh[0] + 1, sh[1] + 2)
+    limb(f, arm_root, 5, pose["fa"], 6, pose["fe"], SOUL_SH)
+    # torso, leaning with the pose
+    for i in range(10):
+        t = i / 9
+        x = sh[0] + (hipx - sh[0]) * t
+        y = sh[1] + (hipy - sh[1]) * t
+        f.rect(x - 2, y, 5, 1, SOUL)
+        f.put(x - 2, y, SOUL_SH)
+    f.rect(hipx - 3, hipy - 1, 7, 3, SOUL_CLOTH)
+    hx, hy = int(round(sh[0])) - 2 + pose.get("head_dx", 0), int(round(sh[1])) - 7 + pose.get("head_dy", 0)
+    f.bitmap(hx, hy, SOUL_HEAD, {"H": SOUL_HAIR, "S": SOUL, "E": SOUL_EYE, "B": SOUL_HAIR if beard else SOUL})
+    limb(f, (hipx + 1, hipy), 5, pose["nf"], 6, pose["nk"], SOUL, thick=2)
+    limb(f, arm_root, 5, pose["na"], 6, pose["ne"], hexc("#b4a898"))
+    return f
+
+
+def make_sisyphus():
+    # straining against the boulder: leaning hard, arms out in front, legs braced
+    push = []
+    for i, (nf, nk, ff, fk) in enumerate([(-10, 20, -45, 10), (-30, 10, -30, 15), (-45, 10, -10, 20), (-30, 15, -30, 10)]):
+        push.append(soul(dict(nf=nf, nk=nk, ff=ff, fk=fk, na=85, ne=95, fa=75, fe=90, lean=6, hipdx=-3, head_dx=1, head_dy=4, bob=(i % 2))))
+    despair = [soul(dict(nf=6, nk=0, ff=-6, fk=0, na=20, ne=-10, fa=-15, fe=10, head_dy=2, head_dx=1, lean=1))]
+    build_sheet("sisyphus", [("push", push, 4, True), ("despair", despair, 1, False)], hexc("#000000"))
+
+
+def make_tantalus():
+    # reaching up for fruit that is never there, then stooping for water that drains away
+    reach = [
+        soul(dict(nf=5, nk=0, ff=-5, fk=0, na=165, ne=172, fa=150, fe=165, head_dy=1)),
+        soul(dict(nf=5, nk=0, ff=-5, fk=0, na=150, ne=168, fa=165, fe=172, head_dy=1)),
+    ]
+    stoop = [soul(dict(nf=10, nk=-10, ff=-5, fk=-5, na=30, ne=40, fa=25, fe=35, lean=4, head_dx=3, head_dy=4))]
+    build_sheet("tantalus", [("reach", reach, 2, True), ("stoop", stoop, 1, False)], hexc("#000000"))
+
+
+# ================================================================ EURYDICE
+def eurydice(phase):
+    """Eurydice's shade: pale, long-haired, in a trailing gown, half transparent."""
+    f = Frame()
+    gown = (205, 212, 222, 165)
+    gown_dk = (150, 160, 176, 150)
+    gown_hi = (235, 240, 248, 185)
+    hair = (120, 110, 104, 175)
+    skin = (222, 214, 206, 185)
+    bob = round(math.sin(phase * math.pi / 2))
+    oy = 3 + bob
+    f.bitmap(9, oy, [
+        ".HHHH.",
+        "HHHHHH",
+        "HHSSSS",
+        "HHSSES",
+        "HHSSSS",
+        "HH.SS.",
+        "HH....",
+        "H.....",
+    ], {"H": hair, "S": skin, "E": (90, 100, 120, 220)})
+    for y in range(oy + 7, 31):
+        t = (y - oy - 7) / (31 - oy - 7)
+        half = 3 + t * 3.5
+        cx = 12 + math.sin(t * 2.5 + phase) * 1.2
+        for x in range(int(cx - half), int(cx + half) + 1):
+            col = gown_dk if x < cx - half + 1.5 else gown_hi if x > cx + half - 1 else gown
+            f.put(x, y, col)
+    # one arm reaching back towards the one who leads her
+    f.line((11, oy + 10), (6 - (phase % 2), oy + 13), skin)
+    f.line((14, oy + 10), (16, oy + 16), gown_dk)
+    return f
+
+
+def make_eurydice():
+    build_sheet("eurydice", [("drift", [eurydice(i) for i in range(4)], 5, True)], None)
+
+
 if __name__ == "__main__":
     make_skeleton()
     make_sally()
@@ -702,3 +802,6 @@ if __name__ == "__main__":
     make_shade()
     make_cerberus()
     make_minotaur()
+    make_sisyphus()
+    make_tantalus()
+    make_eurydice()

@@ -394,11 +394,14 @@ export class Editor {
       'seed',
       'obol',
       'labrys',
+      'fruit',
       'torch',
       'skeleton',
       'shade',
       'cerberus',
       'minotaur',
+      'sisyphus',
+      'wheel',
       'ferry',
     ]
       .filter((t) => counts[t])
@@ -460,6 +463,7 @@ export class Editor {
     e.preventDefault()
 
     if (e.altKey || e.button === 1) {
+      // eyedropper
       const code = getTile(this.level, cell.c, cell.r)
       if (code !== EMPTY) this.select({ kind: 'tile', code })
       return
@@ -567,7 +571,7 @@ export class Editor {
       if (def.toggle === 'dir')
         existing.dir = -(existing.dir ?? this.defaultDir(type))
       if (def.toggle === 'style') {
-        const styles = ['temple', 'gates', 'minoan']
+        const styles = ['temple', 'gates', 'minoan', 'cave']
         existing.style =
           styles[
             (styles.indexOf(existing.style ?? 'temple') + 1) % styles.length
@@ -583,11 +587,14 @@ export class Editor {
   }
 
   exitStyleFor(setting) {
-    return { underworld: 'gates', labyrinth: 'minoan' }[setting] ?? 'temple'
+    return (
+      { underworld: 'gates', labyrinth: 'minoan', ascent: 'cave' }[setting] ??
+      'temple'
+    )
   }
 
   defaultDir(type) {
-    return type === 'cerberus' ? -1 : 1
+    return type === 'cerberus' || type === 'sisyphus' ? -1 : 1
   }
 
   keyDown(e) {
@@ -671,10 +678,23 @@ export class Editor {
           (en.dir ?? 1) < 0 ? ' (drifting up first)' : ' (drifting down first)'
       if (en.type === 'minotaur')
         note = (en.dir ?? 1) < 0 ? ' (facing left)' : ' (facing right)'
+      if (en.type === 'sisyphus')
+        note =
+          (en.dir ?? -1) < 0
+            ? ' (boulder rolls left)'
+            : ' (boulder rolls right)'
+      if (en.type === 'wheel')
+        note =
+          (en.dir ?? 1) < 0
+            ? ' (turning anticlockwise)'
+            : ' (turning clockwise)'
       if (en.type === 'exit')
         note =
-          { gates: ' (bronze gates)', minoan: ' (Minoan doorway)' }[en.style] ??
-          ' (temple)'
+          {
+            gates: ' (bronze gates)',
+            minoan: ' (Minoan doorway)',
+            cave: ' (cave mouth)',
+          }[en.style] ?? ' (temple)'
       parts.push(def.name + note)
     }
     const code = getTile(this.level, c, r)
@@ -684,7 +704,9 @@ export class Editor {
   }
 
   tick() {
-    const mode = ['underworld', 'labyrinth'].includes(this.level.setting)
+    const mode = ['underworld', 'labyrinth', 'ascent'].includes(
+      this.level.setting,
+    )
       ? this.level.setting
       : 'storm'
     if (this.weather.mode !== mode) this.weather = createWeather(3, mode)
@@ -791,6 +813,6 @@ export class Editor {
 function escapeHtml(s) {
   return s.replace(
     /[&<>"]/g,
-    (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch],
+    (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])
   )
 }

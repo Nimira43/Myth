@@ -1,5 +1,5 @@
 import { TILE, COLS, ROWS, VIEW_W, VIEW_H } from './config.js'
-import { drawTile, neighbours, EMPTY } from './tiles.js'
+import { drawTile, neighbours, EMPTY, TILE_BY_CODE } from './tiles.js'
 import { drawSprite } from './sprites.js'
 
 const backdrops = new Map()
@@ -52,6 +52,10 @@ export function drawBackdrop(ctx, zone, setting = 'storm') {
   }
   if (setting === 'labyrinth') {
     drawLabyrinthBackdrop(ctx, zone)
+    return
+  }
+  if (setting === 'ascent') {
+    drawAscentBackdrop(ctx, zone)
     return
   }
   let cv = backdrops.get(zone.id)
@@ -136,6 +140,7 @@ export function drawBackdrop(ctx, zone, setting = 'storm') {
       g.fillRect(x, VIEW_H - h - 10, 1, h + 10)
     }
     g.globalAlpha = 1
+
     g.lineCap = 'round'
     g.strokeStyle = zone.far
     g.globalAlpha = 0.9
@@ -241,7 +246,6 @@ function drawLabyrinthBackdrop(ctx, zone) {
     const rand = seeded(hashString(key))
     g.fillStyle = '#1a130d'
     g.fillRect(0, 0, VIEW_W, VIEW_H)
-
     for (let y = 0; y < VIEW_H; y += 24) {
       const off = (y / 24) % 2 ? 20 : 0
       for (let x = -off; x < VIEW_W; x += 40) {
@@ -250,7 +254,6 @@ function drawLabyrinthBackdrop(ctx, zone) {
         g.fillRect(x + 1, y + 1, 38, 22)
       }
     }
-
     for (const by of [54, 134, 214]) {
       g.fillStyle = 'rgba(40,56,70,0.55)'
       g.fillRect(0, by, VIEW_W, 10)
@@ -276,12 +279,56 @@ function drawLabyrinthBackdrop(ctx, zone) {
       g.fillRect(bx + 20, by + 9, 2, 6)
       g.fillRect(bx - 4, by + 1, 4, 1)
     }
-
     const soot = g.createLinearGradient(0, 0, 0, VIEW_H)
     soot.addColorStop(0, 'rgba(0,0,0,0.55)')
     soot.addColorStop(1, 'rgba(0,0,0,0.15)')
     g.fillStyle = soot
     g.fillRect(0, 0, VIEW_W, VIEW_H)
+    backdrops.set(key, cv)
+  }
+  ctx.drawImage(cv, 0, 0)
+}
+
+function drawAscentBackdrop(ctx, zone) {
+  const key = zone.id + '|ascent'
+  let cv = backdrops.get(key)
+  if (!cv) {
+    cv = document.createElement('canvas')
+    cv.width = VIEW_W
+    cv.height = VIEW_H
+    const g = cv.getContext('2d')
+    const rand = seeded(hashString(key))
+    const grad = g.createLinearGradient(0, 0, 0, VIEW_H)
+    grad.addColorStop(0, '#20242a')
+    grad.addColorStop(0.35, '#0e1014')
+    grad.addColorStop(1, '#050506')
+    g.fillStyle = grad
+    g.fillRect(0, 0, VIEW_W, VIEW_H)
+    const light = g.createRadialGradient(
+      VIEW_W * 0.85,
+      -20,
+      10,
+      VIEW_W * 0.85,
+      -20,
+      220,
+    )
+    light.addColorStop(0, 'rgba(190,200,210,0.35)')
+    light.addColorStop(1, 'rgba(190,200,210,0)')
+    g.fillStyle = light
+    g.fillRect(0, 0, VIEW_W, VIEW_H)
+    for (const side of [0, 1]) {
+      g.fillStyle = side ? '#08090b' : '#0b0c0f'
+      g.beginPath()
+      const edge = side ? VIEW_W : 0
+      g.moveTo(edge, 0)
+      for (let y = 0; y <= VIEW_H; y += 10) {
+        const depth = 30 + rand() * 40 + Math.sin(y / 37) * 12
+        g.lineTo(side ? VIEW_W - depth : depth, y)
+      }
+      g.lineTo(edge, VIEW_H)
+      g.closePath()
+      g.fill()
+    }
     backdrops.set(key, cv)
   }
   ctx.drawImage(cv, 0, 0)
@@ -384,6 +431,17 @@ export function createWeather(seed = 1, mode = 'storm') {
 
 export function updateWeather(w, onThunder) {
   w.t++
+  if (w.mode === 'ascent') {
+    for (const m of w.motes) {
+      m.y -= m.vy * 0.3
+      m.x += Math.sin(w.t / 60 + m.ph) * 0.25
+      if (m.y < -2) {
+        m.y = VIEW_H + 2
+        m.x = w.rand() * VIEW_W
+      }
+    }
+    return
+  }
   if (w.mode === 'labyrinth') {
     for (const m of w.motes) {
       m.y += m.vy * 0.4
@@ -464,6 +522,27 @@ export function drawWeatherBack(ctx, w) {
 let vignette = null
 
 export function drawWeatherFront(ctx, w, { rain = true } = {}) {
+  if (w.mode === 'ascent') {
+    for (let i = 0; i < 7; i++) {
+      const y = 20 + i * 44 + Math.sin(w.t / 140 + i) * 8
+      const x = ((w.t * (0.15 + i * 0.03) + i * 97) % (VIEW_W + 300)) - 150
+      ctx.save()
+      ctx.translate(x, y)
+      ctx.scale(1, 0.35)
+      const grad = ctx.createRadialGradient(0, 0, 4, 0, 0, 150)
+      grad.addColorStop(0, 'rgba(150,158,168,0.18)')
+      grad.addColorStop(1, 'rgba(150,158,168,0)')
+      ctx.fillStyle = grad
+      ctx.beginPath()
+      ctx.arc(0, 0, 150, 0, Math.PI * 2)
+      ctx.fill()
+      ctx.restore()
+    }
+    ctx.fillStyle = 'rgba(190,196,204,0.3)'
+    for (const m of w.motes)
+      ctx.fillRect(Math.round(m.x), Math.round(m.y), 1, 1)
+    rain = false
+  }
   if (w.mode === 'labyrinth') {
     ctx.fillStyle = 'rgba(200,170,120,0.25)'
     for (const m of w.motes)
@@ -512,7 +591,8 @@ export function drawWeatherFront(ctx, w, { rain = true } = {}) {
     g.fillStyle = r
     g.fillRect(0, 0, VIEW_W, VIEW_H)
   }
-  ctx.globalAlpha = w.mode === 'labyrinth' ? 0.5 : 1 - w.flash * 0.6
+  ctx.globalAlpha =
+    w.mode === 'labyrinth' || w.mode === 'ascent' ? 0.5 : 1 - w.flash * 0.6 // lightning briefly lifts the gloom
   ctx.drawImage(vignette, 0, 0)
   ctx.globalAlpha = 1
 }
@@ -528,7 +608,7 @@ export function drawTiles(ctx, level, frame = 0, crumble = null) {
         if ((code === 'T' || code === 'Y' || code === 'C') !== (pass === 0))
           continue
         let amount = 0
-        if (crumble && code === 'm') {
+        if (crumble && TILE_BY_CODE[code]?.behaviour === 'crumble') {
           amount = crumble.get(`${c},${r}`) ?? 0
           if (amount >= 1) continue
         }
@@ -559,6 +639,10 @@ export function drawExit(ctx, c, r, zone, open, frame, style = 'temple') {
     drawMinoanDoor(ctx, c, r, open, frame)
     return
   }
+  if (style === 'cave') {
+    drawCaveMouth(ctx, c, r, open, frame)
+    return
+  }
   const x = c * TILE,
     y = (r - 1) * TILE
   const stone = '#8c867a',
@@ -582,6 +666,7 @@ export function drawExit(ctx, c, r, zone, open, frame, style = 'temple') {
   ctx.fillRect(x + 6, y, 20, 1)
   ctx.fillRect(x + 10, y - 1, 12, 1)
   ctx.fillRect(x + 14, y - 2, 4, 1)
+
   ctx.fillStyle = '#120a18'
   ctx.fillRect(x + 6, y + 6, 20, 26)
   if (open) {
@@ -688,7 +773,6 @@ function drawMinoanDoor(ctx, c, r, open, frame) {
     ctx.fillStyle = '#0c0806'
     ctx.fillRect(x + 7, y + 5, 18, 27)
   }
-
   ctx.fillStyle = open ? '#f0d080' : '#8a6a30'
   ctx.fillRect(x + 15, y + 8, 2, 7)
   ctx.fillRect(x + 11, y + 8, 4, 3)
@@ -729,6 +813,161 @@ export function drawTorch(ctx, c, r, frame) {
   ctx.fillRect(x - 1, y - h + 1, 3, h - 1)
   ctx.fillStyle = '#fff0b0'
   ctx.fillRect(x, y - h + 2, 1, Math.max(1, h - 3))
+}
+
+function drawCaveMouth(ctx, c, r, open, frame) {
+  const x = c * TILE,
+    y = (r - 1) * TILE
+  ctx.fillStyle = '#16171a'
+  ctx.beginPath()
+  ctx.moveTo(x - 2, y + 32)
+  ctx.lineTo(x + 2, y + 8)
+  ctx.lineTo(x + 9, y - 2)
+  ctx.lineTo(x + 20, y - 4)
+  ctx.lineTo(x + 29, y + 4)
+  ctx.lineTo(x + 34, y + 32)
+  ctx.closePath()
+  ctx.fill()
+  ctx.fillStyle = '#2a2c30'
+  ctx.fillRect(x + 4, y + 6, 2, 3)
+  ctx.fillRect(x + 25, y + 2, 3, 2)
+  const inner = () => {
+    ctx.beginPath()
+    ctx.moveTo(x + 4, y + 32)
+    ctx.lineTo(x + 7, y + 10)
+    ctx.lineTo(x + 12, y + 3)
+    ctx.lineTo(x + 19, y + 2)
+    ctx.lineTo(x + 25, y + 8)
+    ctx.lineTo(x + 28, y + 32)
+    ctx.closePath()
+  }
+  if (open) {
+    const pulse = 0.55 + 0.12 * Math.sin(frame / 14)
+    const grad = ctx.createLinearGradient(0, y, 0, y + 32)
+    grad.addColorStop(0, `rgba(215,222,230,${pulse + 0.2})`)
+    grad.addColorStop(1, `rgba(150,160,170,${pulse * 0.5})`)
+    ctx.fillStyle = grad
+    inner()
+    ctx.fill()
+  } else {
+    ctx.fillStyle = '#030304'
+    inner()
+    ctx.fill()
+  }
+}
+
+export function drawFruit(ctx, x, y, frame) {
+  const cx = Math.round(x),
+    cy = Math.round(y + Math.sin(frame / 15 + x) * 1)
+  ctx.fillStyle = '#4a6a2a'
+  ctx.fillRect(cx, cy - 7, 1, 2)
+  ctx.fillRect(cx + 1, cy - 7, 3, 1)
+  ctx.fillStyle = '#7a8a2a'
+  ctx.fillRect(cx - 1, cy - 5, 3, 3)
+  ctx.fillRect(cx - 3, cy - 2, 7, 5)
+  ctx.fillRect(cx - 2, cy + 3, 5, 1)
+  ctx.fillStyle = '#c8b84a'
+  ctx.fillRect(cx - 2, cy - 1, 2, 2)
+  ctx.fillStyle = '#4e5a1c'
+  ctx.fillRect(cx + 2, cy, 2, 3)
+}
+
+export function drawBoulder(ctx, x, y, angle) {
+  const r = 7
+  ctx.fillStyle = '#4a4440'
+  ctx.beginPath()
+  ctx.arc(x, y, r, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.fillStyle = '#6a625a'
+  ctx.beginPath()
+  ctx.arc(x - 2, y - 2, r - 3, 0, Math.PI * 2)
+  ctx.fill()
+  ctx.strokeStyle = '#2a2622'
+  ctx.lineWidth = 1
+  for (let k = 0; k < 3; k++) {
+    const a = angle + k * 2.1
+    ctx.beginPath()
+    ctx.moveTo(x + Math.cos(a) * 2, y + Math.sin(a) * 2)
+    ctx.lineTo(x + Math.cos(a) * (r - 1), y + Math.sin(a) * (r - 1))
+    ctx.stroke()
+  }
+}
+
+export const WHEEL_R = 26
+
+export function drawWheel(ctx, cx, cy, angle, frame) {
+  const fires = []
+  ctx.strokeStyle = '#6a4a24'
+  ctx.lineWidth = 3
+  ctx.beginPath()
+  ctx.arc(cx, cy, WHEEL_R, 0, Math.PI * 2)
+  ctx.stroke()
+  ctx.strokeStyle = '#a8783a'
+  ctx.lineWidth = 1
+  ctx.beginPath()
+  ctx.arc(cx, cy, WHEEL_R - 1, 0, Math.PI * 2)
+  ctx.stroke()
+  for (let k = 0; k < 6; k++) {
+    const a = angle + (k * Math.PI) / 3
+    ctx.strokeStyle = '#5a3e1e'
+    ctx.lineWidth = 2
+    ctx.beginPath()
+    ctx.moveTo(cx, cy)
+    ctx.lineTo(cx + Math.cos(a) * WHEEL_R, cy + Math.sin(a) * WHEEL_R)
+    ctx.stroke()
+  }
+
+  ctx.strokeStyle = '#9c9084'
+  ctx.lineWidth = 2
+  for (const off of [0.7, 2.4, 3.9, 5.5]) {
+    const a = angle + off
+    ctx.beginPath()
+    ctx.moveTo(cx, cy)
+    ctx.lineTo(cx + Math.cos(a) * 9, cy + Math.sin(a) * 9)
+    ctx.stroke()
+  }
+  ctx.fillStyle = '#9c9084'
+  ctx.fillRect(cx - 2, cy - 2, 4, 4)
+  ctx.fillStyle = '#3a3430'
+  ctx.fillRect(
+    cx + Math.cos(angle) * 4 - 1,
+    cy + Math.sin(angle) * 4 - 1,
+    3,
+    3,
+  )
+
+  for (let k = 0; k < 3; k++) {
+    const a = angle + (k * Math.PI * 2) / 3
+    const fx = cx + Math.cos(a) * WHEEL_R,
+      fy = cy + Math.sin(a) * WHEEL_R
+    fires.push({ x: fx, y: fy })
+    const fl = 0.7 + 0.3 * Math.sin(frame / 3 + k)
+    const glow = ctx.createRadialGradient(fx, fy, 1, fx, fy, 12)
+    glow.addColorStop(0, `rgba(255,170,60,${0.6 * fl})`)
+    glow.addColorStop(1, 'rgba(255,90,20,0)')
+    ctx.fillStyle = glow
+    ctx.fillRect(fx - 12, fy - 12, 24, 24)
+    ctx.fillStyle = '#e8501a'
+    ctx.fillRect(fx - 3, fy - 5, 6, 7)
+    ctx.fillStyle = '#ffc040'
+    ctx.fillRect(fx - 2, fy - 3, 4, 4)
+    ctx.fillStyle = '#fff4c0'
+    ctx.fillRect(fx - 1, fy - 1, 2, 2)
+  }
+  return fires
+}
+
+export function drawTantalus(ctx, sprites, c, r, frame) {
+  const x = c * TILE + TILE / 2,
+    y = (r + 1) * TILE
+  const anim = Math.floor(frame / 200) % 3 === 2 ? 'stoop' : 'reach'
+  const fr =
+    Math.floor(frame / 40) % sprites.tantalus.meta.animations[anim].frames
+  drawSprite(ctx, sprites.tantalus, anim, fr, x, y, false)
+  ctx.fillStyle = 'rgba(28,56,80,0.75)'
+  ctx.fillRect(x - 8, y - 8, 16, 8)
+  ctx.fillStyle = 'rgba(120,150,180,0.6)'
+  ctx.fillRect(x - 8, y - 8, 16, 1)
 }
 
 export function drawRelic(ctx, c, r, frame) {
@@ -866,6 +1105,7 @@ export function drawFerry(ctx, x, deckY, dir, sprites, frame, moving = false) {
   ctx.fillStyle = wood
   ctx.fillRect(px, deckY - 8, 3, 10)
   ctx.fillRect(px + (dir > 0 ? -2 : 2), deckY - 10, 3, 3)
+
   const lx = dir > 0 ? x + 40 : x + 7
   ctx.fillStyle = woodDk
   ctx.fillRect(lx, deckY - 16, 1, 16)
@@ -886,6 +1126,7 @@ export function drawFerry(ctx, x, deckY, dir, sprites, frame, moving = false) {
   ctx.fillRect(lan - 18, deckY - 30, 36, 36)
   ctx.fillStyle = `rgba(200,255,210,${flick})`
   ctx.fillRect(lan - 1, deckY - 14, 2, 3)
+
   const sx = dir > 0 ? x + 10 : x + 38
   const anim = moving ? 'pole' : 'idle'
   const fr =
@@ -937,6 +1178,49 @@ export function drawEntity(ctx, e, zone, sprites, frame, level = null) {
       break
     case 'torch':
       drawTorch(ctx, e.c, e.r, frame)
+      break
+    case 'fruit':
+      drawFruit(ctx, e.c * TILE + 8, e.r * TILE + 9, frame)
+      break
+    case 'tantalus':
+      drawTantalus(ctx, sprites, e.c, e.r, frame)
+      break
+    case 'eurydice':
+      ctx.globalAlpha = 0.85
+      drawSprite(
+        ctx,
+        sprites.eurydice,
+        'drift',
+        Math.floor(frame / 12) % 4,
+        footX,
+        footY,
+        false,
+      )
+      ctx.globalAlpha = 1
+      break
+    case 'sisyphus': {
+      const d = (e.dir ?? -1) < 0 ? -1 : 1
+      const sx = e.c * TILE + TILE
+      drawSprite(
+        ctx,
+        sprites.sisyphus,
+        'push',
+        Math.floor(frame / 15) % 4,
+        sx - d * 4,
+        footY,
+        d < 0,
+      )
+      drawBoulder(ctx, sx + d * 9, footY - 7, 0)
+      break
+    }
+    case 'wheel':
+      drawWheel(
+        ctx,
+        e.c * TILE + 2 * TILE,
+        (e.r + 1) * TILE - 2 * TILE,
+        frame * 0.03 * (e.dir ?? 1),
+        frame,
+      )
       break
     case 'minotaur':
       drawSprite(

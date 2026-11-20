@@ -23,6 +23,11 @@ import {
   drawThrones,
   drawFerry,
   drawCerberus,
+  drawFruit,
+  drawBoulder,
+  drawWheel,
+  drawTantalus,
+  WHEEL_R,
   drawDarkness,
   drawThread,
   createWeather,
@@ -30,7 +35,7 @@ import {
   drawWeatherBack,
   drawWeatherFront,
 } from '../render.js'
-import { unlockAudio, thunder } from '../audio.js'
+import { unlockAudio, thunder, lyrePhrase, lyreLament } from '../audio.js'
 import { drawSprite, frameAt } from '../sprites.js'
 import { cloneLevel, ferryRoute } from '../level.js'
 
@@ -68,7 +73,18 @@ const MINOTAUR = {
   h: 32,
 }
 const THREAD_STEP = 6
-const LIGHT = { sally: 62, torch: 46, exit: 40 }
+const LIGHT = {
+  sally: 62,
+  torch: 46,
+  exit: 40,
+  ascentSally: 84,
+  eurydice: 26,
+  daylight: 70,
+}
+const FRUIT = { sense: 44, flee: 1.3, home: 0.3 }
+const BOULDER = { r: 7, speed: 1.5, push: 150, life: 2400 }
+const WHEEL_SPIN = 0.025
+const EURYDICE_GAP = 34
 
 const overlap = (a, b) => a.l < b.r && a.r > b.l && a.t < b.b && a.b > b.t
 
@@ -84,10 +100,11 @@ export class Game {
     this.setting = this.source.setting ?? 'storm'
     this.weather = createWeather(
       7,
-      ['underworld', 'labyrinth'].includes(this.setting)
+      ['underworld', 'labyrinth', 'ascent'].includes(this.setting)
         ? this.setting
         : 'storm',
     )
+    this.lyreT = 60
     this.intro = { t: 0 }
     unlockAudio()
     this.reset()
@@ -169,6 +186,55 @@ export class Game {
       }
     })
 
+    this.fruits = of('fruit').map((e) => {
+      const [minX, maxX] = this.rowRange(e.c, e.r)
+      return {
+        x: e.c * TILE + 8,
+        y: e.r * TILE + 9,
+        homeX: e.c * TILE + 8,
+        minX,
+        maxX,
+        got: false,
+      }
+    })
+    this.tantali = of('tantalus')
+    this.sisyphi = of('sisyphus').map((e) => ({
+      x: e.c * TILE + TILE,
+      y: (e.r + 1) * TILE,
+      dir: (e.dir ?? -1) < 0 ? -1 : 1,
+      state: 'push',
+      timer: 90,
+      boulder: null,
+      t: 0,
+    }))
+    this.wheels = of('wheel').map((e) => ({
+      cx: e.c * TILE + 2 * TILE,
+      cy: (e.r + 1) * TILE - 2 * TILE,
+      dir: (e.dir ?? 1) < 0 ? -1 : 1,
+      angle: 0,
+      fires: [],
+    }))
+
+    const eu = ents.find((e) => e.type === 'eurydice')
+    this.eury = eu
+      ? {
+          x: eu.c * TILE + TILE / 2,
+          y: (eu.r + 1) * TILE,
+          trail: [{ x: eu.c * TILE + TILE / 2, y: (eu.r + 1) * TILE, d: 0 }],
+          total: 0,
+          fade: 0,
+          lost: false,
+          t: 0,
+        }
+      : null
+    if (this.eury) {
+      const d = Math.hypot(
+        this.hero.x - this.eury.x,
+        this.hero.y - this.eury.y,
+      )
+      this.eury.total = d
+      this.eury.trail.push({ x: this.hero.x, y: this.hero.y, d })
+    }
     this.minotaurs = of('minotaur').map((e) => ({
       x: e.c * TILE + TILE,
       y: (e.r + 1) * TILE,
@@ -178,7 +244,6 @@ export class Game {
       vy: 0,
       t: 0,
     }))
-
     this.thread = null
     if (this.setting === 'labyrinth') {
       const anchor = this.exit
@@ -204,6 +269,8 @@ export class Game {
       seeds: got('seed'),
       axes: got('labrys'),
       axesTotal: all('labrys'),
+      fruit: this.fruits.filter((f) => f.got).length,
+      fruitTotal: this.fruits.length,
     }
   }
 
@@ -211,6 +278,8 @@ export class Game {
     const c = this.collected
     if (c.relics < c.relicsTotal) return false
     if (c.axes < c.axesTotal) return false
+    if (c.fruit < c.fruitTotal) return false
+    if (this.eury && this.eury.lost) return false
     if (this.thread && this.thread.broken) return false
     if (this.thrones) return this.offered
     return c.seeds >= this.seedsTotal
@@ -255,7 +324,11 @@ export class Game {
     if (r < 0 || r >= ROWS) return EMPTY
     if (c < 0 || c >= COLS) return '#'
     const ch = this.tiles[r][c]
-    if (ch === 'm' && (this.crumble.get(`${c},${r}`) ?? 0) >= 1) return EMPTY
+    if (
+      TILE_BY_CODE[ch]?.behaviour === 'crumble' &&
+      (this.crumble.get(`${c},${r}`) ?? 0) >= 1
+    )
+      return EMPTY
     return ch
   }
 
@@ -278,6 +351,18 @@ export class Game {
 
   span(x, w) {
     return [Math.floor((x - w / 2) / TILE), Math.floor((x + w / 2 - 1) / TILE)]
+  }
+
+  rowRange(c, r) {
+    const solid = (cc) =>
+      cc < 0 ||
+      cc >= COLS ||
+      TILE_BY_CODE[this.tiles[r][cc]]?.behaviour === 'solid'
+    let a = c,
+      b = c
+    while (!solid(a - 1)) a--
+    while (!solid(b + 1)) b++
+    return [a * TILE + 5, (b + 1) * TILE - 5]
   }
 
   ferryAt(x, y, w) {
@@ -326,7 +411,21 @@ export class Game {
       if (++this.timer > 70) this.reset()
       return
     }
+    if (this.status === 'lost') {
+      this.eury.fade = Math.min(1, this.eury.fade + 0.015)
+      if (++this.timer > 150) this.reset()
+      return
+    }
+    if (this.status === 'farewell') {
+      this.eury.fade = Math.min(1, this.eury.fade + 0.008)
+      if (++this.timer > 220) this.status = 'won'
+      return
+    }
     if (this.status === 'won') return
+    if (this.setting === 'ascent' && --this.lyreT <= 0) {
+      lyrePhrase()
+      this.lyreT = 170 + Math.floor(Math.random() * 120)
+    }
 
     this.updateFerries()
     this.updateHero()
@@ -335,6 +434,10 @@ export class Game {
     this.updateCerberi()
     this.updateMinotaurs()
     this.updateThread()
+    this.updateFruit()
+    this.updateSisyphi()
+    for (const w of this.wheels) w.angle += WHEEL_SPIN * w.dir
+    this.updateEurydice()
     this.checkPickupsAndDanger()
   }
 
@@ -502,7 +605,7 @@ export class Game {
     const r = h.y / TILE
     const [c0, c1] = this.span(h.x, HERO_BOX.w)
     for (let c = c0; c <= c1; c++) {
-      if (this.code(c, r) === 'm') {
+      if (this.behaviour(c, r) === 'crumble') {
         const key = `${c},${r}`
         this.crumble.set(
           key,
@@ -719,6 +822,105 @@ export class Game {
     if (d > THREAD_STEP) pts.push(here)
   }
 
+  updateFruit() {
+    const h = this.hero
+    for (const f of this.fruits) {
+      if (f.got) continue
+      const dx = f.x - h.x
+      const near = Math.abs(dx) < FRUIT.sense && Math.abs(h.y - 16 - f.y) < 28
+      if (near) f.x += (Math.sign(dx) || 1) * FRUIT.flee
+      else if (Math.abs(f.x - f.homeX) > 0.5)
+        f.x += Math.sign(f.homeX - f.x) * FRUIT.home
+      f.x = Math.max(f.minX, Math.min(f.maxX, f.x))
+    }
+  }
+
+  updateSisyphi() {
+    for (const s of this.sisyphi) {
+      s.t++
+      if (s.state === 'push') {
+        if (--s.timer <= 0) {
+          s.boulder = {
+            x: s.x + s.dir * 10,
+            y: s.y - BOULDER.r,
+            vx: s.dir * BOULDER.speed,
+            vy: 0,
+            angle: 0,
+            life: 0,
+          }
+          s.state = 'despair'
+        }
+        continue
+      }
+      const b = s.boulder
+      if (!b) {
+        s.state = 'push'
+        s.timer = BOULDER.push
+        continue
+      }
+      b.life++
+      const feet = b.y + BOULDER.r
+      const grounded = feet % TILE === 0 && this.supported(b.x, feet, 12)
+      if (grounded) {
+        const ac = Math.floor((b.x + Math.sign(b.vx) * (BOULDER.r + 1)) / TILE)
+        if (this.isSolid(ac, Math.floor(b.y / TILE))) b.vx = -b.vx
+        b.x += b.vx
+        b.angle += b.vx / BOULDER.r
+      } else {
+        b.vy = Math.min(b.vy + PHYSICS.gravity, PHYSICS.maxFall + 1)
+        const nf = feet + b.vy
+        const rowTop = Math.floor(nf / TILE) * TILE
+        if (feet <= rowTop && nf >= rowTop && this.supported(b.x, rowTop, 12)) {
+          b.y = rowTop - BOULDER.r
+          b.vy = 0
+        } else b.y += b.vy
+        b.x += b.vx * 0.5
+      }
+      const inHazard =
+        this.behaviour(Math.floor(b.x / TILE), Math.floor(b.y / TILE)) ===
+        'hazard'
+      if (inHazard || b.y > VIEW_H + 20 || b.life > BOULDER.life)
+        s.boulder = null
+    }
+  }
+
+  updateEurydice() {
+    const e = this.eury
+    if (!e || e.lost) return
+    const h = this.hero
+    e.t++
+    const last = e.trail[e.trail.length - 1]
+    const step = Math.hypot(h.x - last.x, h.y - last.y)
+    if (step > 2) {
+      e.total += step
+      e.trail.push({ x: h.x, y: h.y, d: e.total })
+    }
+    const want = Math.max(0, e.total - EURYDICE_GAP)
+    let i = e.trail.length - 1
+    while (i > 0 && e.trail[i - 1].d > want) i--
+    const a = e.trail[Math.max(0, i - 1)],
+      b = e.trail[i]
+    const span = b.d - a.d || 1
+    const t = Math.max(0, Math.min(1, (want - a.d) / span))
+    e.x = a.x + (b.x - a.x) * t
+    e.y = a.y + (b.y - a.y) * t
+    const dx = e.x - h.x
+    if (
+      h.input &&
+      Math.abs(dx) > 8 &&
+      Math.abs(e.y - h.y) < 40 &&
+      Math.sign(dx) === h.input &&
+      this.status === 'playing'
+    ) {
+      e.lost = true
+      this.status = 'lost'
+      this.timer = 0
+      this.deaths++
+      lyreLament()
+      this.say('You turned back. Eurydice slips away into the dark.', 160)
+    }
+  }
+
   checkPickupsAndDanger() {
     const h = this.hero
     const box = {
@@ -751,6 +953,20 @@ export class Game {
             120,
           )
         }
+      }
+    }
+
+    for (const f of this.fruits) {
+      if (f.got) continue
+      if (overlap(box, { l: f.x - 5, r: f.x + 5, t: f.y - 6, b: f.y + 5 })) {
+        f.got = true
+        const c = this.collected
+        this.say(
+          c.fruit === c.fruitTotal
+            ? 'The last of the fruit Tantalus can never reach.'
+            : `A fruit Tantalus will never taste (${c.fruit} of ${c.fruitTotal}).`,
+          140,
+        )
       }
     }
 
@@ -823,6 +1039,32 @@ export class Game {
         return
       }
     }
+    for (const s of this.sisyphi) {
+      const b = s.boulder
+      if (
+        b &&
+        overlap(inner, {
+          l: b.x - BOULDER.r + 1,
+          r: b.x + BOULDER.r - 1,
+          t: b.y - BOULDER.r + 1,
+          b: b.y + BOULDER.r,
+        })
+      ) {
+        this.die()
+        return
+      }
+    }
+    for (const w of this.wheels) {
+      for (let k = 0; k < 3; k++) {
+        const a = w.angle + (k * Math.PI * 2) / 3
+        const fx = w.cx + Math.cos(a) * WHEEL_R,
+          fy = w.cy + Math.sin(a) * WHEEL_R
+        if (overlap(inner, { l: fx - 4, r: fx + 4, t: fy - 5, b: fy + 3 })) {
+          this.die()
+          return
+        }
+      }
+    }
     for (const m of this.minotaurs) {
       const mb = {
         l: m.x - MINOTAUR.w / 2,
@@ -857,7 +1099,14 @@ export class Game {
         b: (this.exit.r + 1) * TILE,
       }
       if (overlap(box, eb)) {
-        if (this.exitOpen) this.status = 'won'
+        if (this.exitOpen && this.eury) {
+          this.status = 'farewell'
+          this.timer = 0
+          this.say(
+            'At the threshold Eurydice stops. \u201cFarewell,\u201d she whispers, and the dark takes her back.',
+            240,
+          )
+        } else if (this.exitOpen) this.status = 'won'
         else if (!this.exitWarned && this.thread) {
           this.exitWarned = true
           const c = this.collected
@@ -903,6 +1152,30 @@ export class Game {
       else if (it.type === 'seed') drawSeed(ctx, it.c, it.r, f)
       else if (it.type === 'labrys') drawLabrys(ctx, it.c, it.r, f)
       else drawObol(ctx, it.c, it.r, f)
+    }
+    for (const t of this.tantali) drawTantalus(ctx, this.sprites, t.c, t.r, f)
+    for (const fr of this.fruits) if (!fr.got) drawFruit(ctx, fr.x, fr.y, f)
+    for (const w of this.wheels) drawWheel(ctx, w.cx, w.cy, w.angle, f)
+    for (const sy of this.sisyphi) {
+      const pushing = sy.state === 'push'
+      drawSprite(
+        ctx,
+        this.sprites.sisyphus,
+        pushing ? 'push' : 'despair',
+        pushing ? Math.floor(sy.t / 15) % 4 : 0,
+        sy.x - sy.dir * 4,
+        sy.y,
+        sy.dir < 0,
+      )
+      if (pushing)
+        drawBoulder(
+          ctx,
+          sy.x + sy.dir * 10,
+          sy.y - BOULDER.r,
+          sy.t * 0.02 * sy.dir,
+        )
+      if (sy.boulder)
+        drawBoulder(ctx, sy.boulder.x, sy.boulder.y, sy.boulder.angle)
     }
     for (const fy of this.ferries)
       drawFerry(ctx, fy.x, fy.deckY, fy.dir, this.sprites, f, fy.vx !== 0)
@@ -952,7 +1225,45 @@ export class Game {
         this.hero.x < s.x,
       )
     }
+    if (this.eury) {
+      ctx.globalAlpha = 0.8 * (1 - this.eury.fade)
+      drawSprite(
+        ctx,
+        this.sprites.eurydice,
+        'drift',
+        frameAt(this.sprites.eurydice, 'drift', this.eury.t),
+        this.eury.x,
+        this.eury.y,
+        this.eury.x > this.hero.x,
+      )
+      ctx.globalAlpha = 1
+    }
     if (this.setting === 'labyrinth') this.drawLabyrinthLight(ctx)
+    if (this.setting === 'ascent') {
+      const lights = [
+        { x: this.hero.x, y: this.hero.y - 16, r: LIGHT.ascentSally },
+      ]
+      if (this.eury && this.eury.fade < 1)
+        lights.push({
+          x: this.eury.x,
+          y: this.eury.y - 16,
+          r: LIGHT.eurydice * (1 - this.eury.fade) + 1,
+        })
+      if (this.exit)
+        lights.push({
+          x: this.exit.c * TILE + TILE,
+          y: this.exit.r * TILE,
+          r: LIGHT.daylight,
+        })
+      for (const t of this.torches)
+        lights.push({
+          x: t.c * TILE + 8,
+          y: t.r * TILE + 4,
+          r: LIGHT.torch,
+          warm: true,
+        })
+      drawDarkness(ctx, lights, 0.9)
+    }
     drawWeatherFront(ctx, this.weather)
     this.drawHud(ctx)
 
@@ -965,6 +1276,8 @@ export class Game {
       ctx.fillRect(0, 0, VIEW_W, VIEW_H)
       banner(ctx, 'You have perished', '#c86a5a')
     }
+    if (this.status === 'lost' && this.timer > 30)
+      banner(ctx, 'Eurydice is lost', '#a8b4c4')
     if (this.status === 'won') {
       ctx.fillStyle = 'rgba(0,0,0,0.45)'
       ctx.fillRect(0, 0, VIEW_W, VIEW_H)
@@ -1090,6 +1403,9 @@ export class Game {
     if (c.relicsTotal) counters.push(`RELICS ${c.relics}/${c.relicsTotal}`)
     if (this.seedsTotal) counters.push(`SEEDS ${c.seeds}/${this.seedsTotal}`)
     if (c.axesTotal) counters.push(`AXES ${c.axes}/${c.axesTotal}`)
+    if (c.fruitTotal) counters.push(`FRUIT ${c.fruit}/${c.fruitTotal}`)
+    if (this.eury)
+      counters.push(this.eury.lost ? 'EURYDICE IS LOST' : 'EURYDICE FOLLOWS')
     if (this.thread)
       counters.push(this.thread.broken ? 'THREAD CUT' : 'THREAD WHOLE')
     if (this.ferries.length || this.items.some((i) => i.type === 'obol'))

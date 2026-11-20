@@ -5,6 +5,7 @@ export const SETTINGS = [
   { id: 'storm', name: 'Outdoors – storm' },
   { id: 'underworld', name: 'Underworld' },
   { id: 'labyrinth', name: 'Labyrinth – torchlit, with Ariadne\u2019s thread' },
+  { id: 'ascent', name: 'The ascent – dark, steep and foggy, with a lyre' },
 ]
 
 export const ENTITY_TYPES = [
@@ -23,7 +24,7 @@ export const ENTITY_TYPES = [
     unique: true,
     size: [2, 2],
     toggle: 'style',
-    hint: 'Opens when the level is solved. Click again to cycle: temple / bronze gates / Minoan doorway',
+    hint: 'Opens when the level is solved. Click again to cycle: temple / bronze gates / Minoan doorway / cave mouth',
   },
   {
     type: 'thrones',
@@ -40,6 +41,22 @@ export const ENTITY_TYPES = [
     unique: false,
     size: [3, 1],
     hint: 'Place just above water. Costs one obol per crossing',
+  },
+  {
+    type: 'eurydice',
+    group: 'Set pieces',
+    name: 'Eurydice',
+    unique: true,
+    size: [1, 2],
+    hint: 'Her shade follows Sally. If Sally turns back towards her, she is lost. She fades at the exit, as the myth says she must',
+  },
+  {
+    type: 'tantalus',
+    group: 'Set pieces',
+    name: 'Tantalus',
+    unique: false,
+    size: [1, 2],
+    hint: 'Stands in his pool, reaching for fruit that pulls away. Scenery',
   },
   {
     type: 'torch',
@@ -72,6 +89,14 @@ export const ENTITY_TYPES = [
     unique: false,
     size: [1, 1],
     hint: "Silver coin: Charon's fare",
+  },
+  {
+    type: 'fruit',
+    group: 'Collectables',
+    name: 'Fruit of Tantalus',
+    unique: false,
+    size: [1, 1],
+    hint: 'Drifts away when Sally comes near. Corner it against a wall. Collect them all to open the exit',
   },
   {
     type: 'labrys',
@@ -107,6 +132,24 @@ export const ENTITY_TYPES = [
     size: [2, 2],
     toggle: 'dir',
     hint: 'Chained. Lunges only when Sally heads for the exit, then rests. Click again to face the other way',
+  },
+  {
+    type: 'sisyphus',
+    group: 'Hazards',
+    name: 'Sisyphus',
+    unique: false,
+    size: [2, 2],
+    toggle: 'dir',
+    hint: 'Pushes his boulder it breaks loose and rolls, bouncing off walls and dropping off ledges. Click again to flip which way it rolls',
+  },
+  {
+    type: 'wheel',
+    group: 'Hazards',
+    name: "Ixion's wheel",
+    unique: false,
+    size: [4, 4],
+    toggle: 'dir',
+    hint: 'A burning wheel turning in the dark: its three fires kill. Click again to reverse its spin',
   },
   {
     type: 'minotaur',
@@ -209,7 +252,13 @@ export function validateLevel(level) {
   }
   if (count('ferry') && !count('obol'))
     problems.push('A ferry but no obols to pay Charon')
-  if (!count('relic') && !count('seed') && !count('labrys'))
+  if (
+    !count('relic') &&
+    !count('seed') &&
+    !count('labrys') &&
+    !count('fruit') &&
+    !count('eurydice')
+  )
     problems.push('Nothing to collect – the exit starts open')
   if (level.setting === 'labyrinth' && !count('torch'))
     problems.push(

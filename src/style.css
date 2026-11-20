@@ -3,8 +3,6 @@
 @import "@fontsource/almendra/400-italic.css";
 @import "@fontsource/vt323";
 
-/* Myth — dark, mythic editor chrome: soot-black panels, tarnished bronze,
-   candle-lit parchment text. Almendra for titles, VT323 for everything else. */
 :root {
   --bg: #07060a;
   --panel: #0f0d12;

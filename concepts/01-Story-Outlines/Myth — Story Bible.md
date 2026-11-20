@@ -1,7 +1,7 @@
 # Myth — Story Bible
 ## by Nick Rabone
 
-14th Novemeber 2026
+14th November, 2026 · @Nick
 
 ## Premise
 
@@ -22,7 +22,7 @@ Sally is the reason the house lets her in: she writes stories for a living. Her 
 | Born | 1967, so 25 in 1992 |
 | Home | Warwick |
 | Job | Music journalist |
-| Car | Red Mini Cooper, white roof, registration K732 LNT (K plates ran from August 1992, which fits) |
+| Car | Red Mini Cooper, white roof, registration K732 LNT (K plates ran from August 1992) |
 | Look | Brunette, hair half up, red-and-black flannel shirt over a band T-shirt, ripped jeans, black Doc Martens, a patched rucksack |
 | Personality | Strong-minded, says what she thinks |
 | Loves | Grunge: Nirvana, Pearl Jam, Soundgarden, Alice in Chains, Stone Temple Pilots |
@@ -53,6 +53,11 @@ The house is the hub, in the spirit of Jet Set Willy's mansion. Each zone is a d
 
 That is 40 levels across 9 zones, matching the draft.
 
+Open questions:
+
+- [ ] Who the Keeper was: decided. He's Mímir (see The Keeper).
+- [ ] Does the house change as zones are saved (lights coming on, rain easing, rooms repairing)? It would show progress in the hub.
+
 ## The Keeper
 
 The Keeper is **Mímir**, the Norse guardian of wisdom, living in 1992 as an elderly English professor. No figure in the myths fits the house better.
@@ -76,7 +81,7 @@ The Keeper is **Mímir**, the Norse guardian of wisdom, living in 1992 as an eld
 | Mnemosyne | Greek | Goddess of memory. Orphic gold tablets tell the dead to avoid the spring of forgetting and drink from Memory's lake instead: the exact opposite of Lethe |
 | Thoth | Egyptian | Scribe of the gods, who records the verdict at the Weighing of the Heart |
 | Fintan mac Bóchra | Irish | Survived the Flood and lived for millennia as a salmon, an eagle and a hawk, remembering all of Ireland's history |
-| Taliesin | Welsh | The bard who claims to have been present through all the ages, and whose poem is your Battle of the Trees |
+| Taliesin | Welsh | The bard who claims to have been present through all the ages, and whose poem is our Battle of the Trees |
 | Väinämöinen | Finnish | At the end of the *Kalevala* he sails away, promising to return when he's needed |
 
 ## The Grey Water and the World-Gnawer
@@ -105,7 +110,7 @@ How it plays:
 
 ## The Descent
 
-Every zone passes through its land of the dead. That is the thread that makes nine mythologies feel like one journey: each culture's underworld is a different face of the same grey water. Your draft already has an underworld in almost every zone.
+Every zone passes through its land of the dead. That is the thread that makes nine mythologies feel like one journey: each culture's underworld is a different face of the same grey water. The draft already has an underworld in almost every zone.
 
 | Zone | Land of the dead | Level in the draft | Shape of the zone |
 | --- | --- | --- | --- |
@@ -127,7 +132,7 @@ The draft's levels mostly stay as written; what changes is their order, so each 
 
 | # | Zone | Suggested level order (draft numbers in brackets) | What "saving" the zone means |
 | --- | --- | --- | --- |
-| 1 | Greek | Gates of the Underworld (1) → Crag of Tartarus (3) → Labyrinth of Knossos (2) → Temple of Medusa (4) → Forge of Etna (5) → Strait of the Sirens (7) → Tapestry Hall of Arachne (8) → Garden of the Hesperides (6) | Start in Hades, end at the western edge of the world under Atlas. The golden apples, Hera's wedding gift, are the zone's restored memory |
+| 1 | Greek | Gates of the Underworld (1) → Crag of Tartarus (3) → Where Orpheus Looked Back (new) → Labyrinth of Knossos (2) → Isle of the Gorgons (4) → Forge of Etna (5) → Strait of the Sirens (7) → Tapestry Hall of Arachne (8) → Garden of the Hesperides (6) | Start in Hades, end at the western edge of the world under Atlas. The golden apples, Hera's wedding gift, are the zone's restored memory |
 | 2 | Egyptian | Hall of Two Truths (1) → Night Barque of Ra (2) → Tomb of Osiris (3) → Pyramid of Unas (4) | Already a perfect arc: judged, through the night, reborn, up to the stars. Each level restores a name on a cartouche |
 | 3 | Irish | Hill of Tara (5) → Hall of the Dagda (6) → Sea of Moyle (2) → Forge of Culann (3) → Bridge of the Leaps (4) → Well of Segais (1) | Follows the Irish cycles in order: Mythological, then Ulster, then Fenian. It ends with the Salmon of Knowledge, which is all memory in one fish |
 | 4 | Welsh | Cantre'r Gwaelod (2) → Battle of the Trees (1) → Trial of Annwn (3) | The drowned kingdom first sets the theme; Annwn's Cauldron of Rebirth brings things back from death at the end |
@@ -139,7 +144,7 @@ The draft's levels mostly stay as written; what changes is their order, so each 
 
 A few beats worth adding:
 
-- **Greek, an Orpheus level.** "The Way Up": a long climb out of Hades where turning back sends you down. It fits between Tartarus and the Labyrinth. Greek can carry nine levels.
+- **Greek, an Orpheus level.** Decided and built as "Where Orpheus Looked Back", Greek's third level, between Tartarus and the Labyrinth. Greek now has nine levels.
 - **A Keeper's note per zone.** One page in the zone's first room sets up the myth in a few lines, in the Keeper's voice, before Sally steps through.
 - **Sally's reaction card per level.** One line on exit. It's where her personality lives.
 
@@ -156,17 +161,13 @@ The level is the draft's Roots level, scaled up:
 
 **She doesn't kill the dragon.** In *Völuspá*, Níðhöggr is still flying at the end of the world, so killing it would break the myth. Instead the roots heal, the grey water drains, and the dragon sinks back into the dark to gnaw another day. That's faithful, and it fits the dread.
 
-**Epilogue.** Dawn. The storm has gone. Sally is sitting in the Mini on the verge of the back road. She turns the key, and it starts. The Walkman clicks on mid-song. In the mirror, the track behind her leads to a ruin that clearly hasn't had a roof for a hundred years. On the passenger seat is her notebook, every page full.
+**Epilogue.** Dawn. The storm has gone. Sally is sitting in the Mini on the verge of the back road. She turns the key, and it starts. The Walkman clicks on mid-song. In the mirror, the track behind her leads to a ruin that clearly hasn't had a roof for a hundred years. On the passenger seat is her notebook, every page full. And on the dashboard, catching the first sun, sits a golden apple from the Garden of the Hesperides. It was all real.
 
 The final card is her article in print, with the byline *by Sally Miller*. Under it, the last line of the notebook from the concept art: "Maybe this is just the beginning..."
 
-Open question:
+## Faithfulness notes
 
-Was it real? The full notebook says yes. Do we leave that ambiguous, or does a final detail settle it, like a golden apple on the dashboard?
-
-## Faithfulness Notes & Corrections
-
-The draft was mostly true to its sources. These are the places where it drifts, given the aim of staying as close to the stories as possible. All of these fixes are now applied in Revised level entries, below. They're written from knowledge of the texts; the Finnish Sun and Moon entry was checked against Crawford's translation of canto 49.
+The draft is strong and mostly true to its sources. These are the places where it drifts, given the aim of staying as close to the stories as possible. All of these fixes are now applied in Revised level entries, below. They're written from knowledge of the texts; the Finnish Sun and Moon entry was checked against Crawford's translation of canto 49.
 
 | Level | Where it drifts | Suggested fix |
 | --- | --- | --- |
@@ -208,11 +209,38 @@ These replace the matching entries in the level outlines draft. Every other leve
 - **Level Goal:** Gather four bronze double axes (labrys) from the dead-end alcoves, then follow the thread back to the entrance.
 - Layout and hazards as drafted.
 
+**3. The Crag of Tartarus (Sisyphus, Tantalus and Ixion)** *(built)*
+
+- **Screen Layout:** A switchback crag of black obsidian falling away beneath Hades. Tantalus stands in his pool at the foot, and a cave mouth at the top leads to the path up.
+- **Core Mechanic:** The fruit that hangs over Tantalus drifts away from anyone who reaches for it, as in *Odyssey* XI. Sally has to corner each fruit against the rock.
+- **Hazards and Enemies:** Sisyphus pushes his stone at the top; it breaks loose and rolls down every switchback. Ixion burns on his turning wheel, and its three fires sweep the left-hand ledges.
+- **Level Goal:** Gather the four fruits Tantalus can never reach, then climb to the cave mouth.
+
+**New. Where Orpheus Looked Back (Orpheus and Eurydice)** *(built)*
+
+- **Screen Layout:** The steep, dark, fog-choked path up from the underworld, as Ovid describes it: four switchback ledges climbing to a grey light at the top.
+- **Core Mechanic:** Eurydice's shade follows a few steps behind Sally along her exact path. If Sally turns back towards her, Eurydice is lost and the climb starts again. A faint lyre plays as she climbs.
+- **Hazards and Enemies:** Shades of the dead drift across the path, loose scree slides away underfoot, and the gaps drop Sally back down a ledge.
+- **Level Goal:** Reach the threshold without turning back. There, faithful to the myth, Eurydice stops, whispers farewell and fades: the tale is remembered as it truly ended.
+
 **4. The Isle of the Gorgons (Medusa)** *(renamed from The Temple of Athena)*
 
 - **Screen Layout:** A ruined temple on the Gorgons' isle at the edge of the world, full of lifelike statues of those who looked. The ruin echoes Ovid's telling, in which Medusa was cursed in Athena's temple.
 - **Level Goal:** Retrieve the gifts Perseus was given: the polished shield (Athena), the winged sandals (the nymphs) and the Helm of Darkness (Hades).
 - Mechanic and hazards as drafted.
+
+*Decided for the build:*
+
+- **Medusa:** drawn from the ancient descriptions, not any film version: serpent hair writhing even when she's still, a fixed and terrible stare, and in some tellings wings and bronze hands.
+- **Why the gifts matter:** the grey water of forgetting has scattered Perseus's gifts across the isle. Without them the myth can't happen. Sally isn't taking the hero's tools for herself; she gathers them so the story can still be told.
+- **The gaze:** if Sally faces Medusa when her gaze falls on her, she turns to stone. Once Sally has the shield, she can walk towards Medusa facing away and watch her in its reflection, as Perseus did.
+- **The ending, the game's first cutscene:**
+  1. Sally lays the shield, sandals and helm on a stone at the water's edge and slips away through the exit.
+  2. Black for a second or two, with only the sound of waves.
+  3. Light returns on the same shore. A ship's prow, and Perseus steps off. He takes up the sandals (wings flutter at his heels), then the helm, then the shield.
+  4. He turns his back to Medusa's temple and walks backwards towards it, watching her in the polished shield.
+  5. Fade to black before the deed. The Keeper: "And so it was that Perseus came to the isle of the Gorgons…" Then "The tale is remembered."
+- **For later:** the same cutscene system can give Theseus, Jason and Beowulf their moments.
 
 **7. The Strait of Anthemoessa (The Sirens)**
 
@@ -319,4 +347,4 @@ About ten reusable systems cover nearly every mechanic in the 40 levels. Build t
 
 **The Greek zone needs, in order:** moving platforms (Charon), carry and place (the seeds), the lunge guardian (Cerberus), drifting shades, then emitters. Greek's one-off twists are Sisyphus's rolling boulder, Ariadne's thread, Medusa's sweeping gaze, the Sirens' inverted controls and Arachne's springy threads.
 
-**Fonts.** Almendra is the title font: it reads as old and carved without being a cliché. VT323 is a crisp pixel terminal font, which suits the HUD, numbers and Sally's 1992 voice. Decided: Almendra for the title, the Keeper's notes and the level intro cards; VT323 for the HUD, menus and Sally's lines.
+**Fonts.** Almendra is an excellent title font: it reads as old and carved without being a cliché. VT323 is a crisp pixel terminal font, which suits the HUD, numbers and Sally's 1992 voice. Decided: Almendra for the title, the Keeper's notes and the level intro cards; VT323 for the HUD, menus and Sally's lines.
